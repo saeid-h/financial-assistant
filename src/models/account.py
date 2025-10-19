@@ -181,6 +181,25 @@ class Account:
                 WHERE id = ?
             """, params)
             
+            # If initial_balance was updated, recalculate current_balance
+            if initial_balance is not None:
+                # Get sum of all transactions for this account
+                cursor.execute("""
+                    SELECT COALESCE(SUM(amount), 0) 
+                    FROM transactions 
+                    WHERE account_id = ?
+                """, (account_id,))
+                
+                transaction_sum = cursor.fetchone()[0]
+                new_current_balance = initial_balance + transaction_sum
+                
+                # Update current_balance
+                cursor.execute("""
+                    UPDATE accounts 
+                    SET current_balance = ? 
+                    WHERE id = ?
+                """, (new_current_balance, account_id))
+            
             conn.commit()
             return cursor.rowcount > 0
         
