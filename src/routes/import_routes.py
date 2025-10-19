@@ -113,21 +113,12 @@ def upload_file():
         total_credits = sum(txn['amount'] for txn in valid_transactions if txn['amount'] > 0)
         total_debits = sum(abs(txn['amount']) for txn in valid_transactions if txn['amount'] < 0)
         
-        # Store transactions in session for confirmation step
-        # Convert dates to strings for JSON serialization
-        transactions_for_session = []
-        for txn in valid_transactions:
-            txn_copy = txn.copy()
-            if 'date' in txn_copy:
-                txn_copy['date'] = txn_copy['date'].isoformat()
-            # Remove raw_data to keep session small
-            txn_copy.pop('raw_data', None)
-            transactions_for_session.append(txn_copy)
-        
-        session['pending_transactions'] = transactions_for_session
+        # Don't store transactions in session (too large for 800+ transactions!)
+        # Instead, keep the temp file and re-parse on confirmation
         session['import_account_id'] = account_id
         session['import_filename'] = filename
-        session['import_temp_file'] = temp_path  # Store for archiving later
+        session['import_temp_file'] = temp_path  # Keep temp file for re-parsing
+        session['import_valid_count'] = len(valid_transactions)  # For verification
         
         return jsonify({
             'success': True,
@@ -168,24 +159,38 @@ def confirm_import():
     """Confirm and save transactions to database."""
     from flask import current_app
     
-    # Get pending transactions from session
-    pending_transactions = session.get('pending_transactions')
+    # Get import info from session
     account_id = session.get('import_account_id')
     filename = session.get('import_filename')
     temp_file_path = session.get('import_temp_file')
+    expected_count = session.get('import_valid_count')
     
-    if not pending_transactions or not account_id:
+    if not account_id or not temp_file_path:
         return jsonify({'error': 'No pending import found. Please upload a file first.'}), 400
     
+    if not os.path.exists(temp_file_path):
+        return jsonify({'error': 'Uploaded file no longer available. Please upload again.'}), 400
+    
     try:
-        # Convert date strings back to date objects
-        from datetime import date as date_class
-        for txn in pending_transactions:
-            if isinstance(txn['date'], str):
-                txn['date'] = date_class.fromisoformat(txn['date'])
+        # Re-parse the CSV file to get transactions
+        parser = CSVParser()
+        transactions = parser.parse_file(temp_file_path)
+        
+        # Validate and filter transactions
+        validator = TransactionValidator(current_app.config['DATABASE'])
+        valid_transactions = []
+        
+        for txn in transactions:
+            txn['account_id'] = account_id
+            result = validator.validate(txn)
+            if result.is_valid:
+                valid_transactions.append(txn)
+        
+        if len(valid_transactions) != expected_count:
+            print(f"Warning: Expected {expected_count} valid transactions, got {len(valid_transactions)}")
         
         # Save transactions to database
-        count = Transaction.bulk_create(pending_transactions)
+        count = Transaction.bulk_create(valid_transactions)
         
         # Archive the CSV file
         if temp_file_path and os.path.exists(temp_file_path):
@@ -208,10 +213,10 @@ def confirm_import():
                 # Don't fail the import if archiving fails
         
         # Clear session
-        session.pop('pending_transactions', None)
         session.pop('import_account_id', None)
         session.pop('import_filename', None)
         session.pop('import_temp_file', None)
+        session.pop('import_valid_count', None)
         
         return jsonify({
             'success': True,
