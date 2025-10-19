@@ -17,6 +17,9 @@ pytest-flask>=1.3.0
 # Development
 python-dateutil>=2.8.2
 
+# Pattern Matching (for recurring transaction detection)
+python-Levenshtein>=0.25.0
+
 # Future additions (uncomment when needed)
 # alembic==1.13.0  # For database migrations
 # python-dotenv==1.0.0  # For environment variables
