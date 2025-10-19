@@ -1,9 +1,10 @@
 # PBI-2: CSV Import and Transaction Management
 
-**Status**: Agreed  
+**Status**: Done  
 **Priority**: P0 (Highest)  
 **Phase**: Phase 1 - MVP  
 **Created**: 2025-10-19  
+**Completed**: 2025-10-19  
 **Owner**: Saeed Hoss
 
 [View in Backlog](../backlog.md#user-content-2)
