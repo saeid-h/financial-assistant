@@ -290,9 +290,9 @@ function openCategoryPicker(transactionId, buttonElement) {
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
             
-            // Position below the button (adjusted for smaller size)
+            // Position below the button (adjusted for smaller size, more to the left)
             content.style.top = (rect.bottom + scrollTop + 10) + 'px';
-            content.style.left = Math.max(20, (rect.left + scrollLeft - 150)) + 'px';
+            content.style.left = Math.max(20, (rect.left + scrollLeft - 280)) + 'px';
         } else {
             // Center on screen if no button reference
             content.style.top = '50%';
