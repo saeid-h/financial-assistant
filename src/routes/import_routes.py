@@ -17,6 +17,7 @@ from models.transaction import Transaction
 from services.csv_parser import CSVParser, CSVParseError
 from services.transaction_validator import TransactionValidator
 from services.file_archiver import FileArchiver
+from services.duplicate_detector import DuplicateDetector
 
 import_bp = Blueprint('import', __name__, url_prefix='/import')
 
@@ -189,8 +190,23 @@ def confirm_import():
         if len(valid_transactions) != expected_count:
             print(f"Warning: Expected {expected_count} valid transactions, got {len(valid_transactions)}")
         
-        # Save transactions to database
-        count = Transaction.bulk_create(valid_transactions)
+        # Check for duplicates
+        detector = DuplicateDetector(current_app.config['DATABASE'])
+        non_duplicate_transactions = []
+        duplicate_count = 0
+        
+        for txn in valid_transactions:
+            duplicate_check = detector.check_duplicate(txn)
+            
+            # Only import if not an exact duplicate
+            if duplicate_check['status'] == 'unique':
+                non_duplicate_transactions.append(txn)
+            else:
+                duplicate_count += 1
+                print(f"Skipping duplicate: {txn['date']} - {txn['description']} - ${txn['amount']}")
+        
+        # Save non-duplicate transactions to database
+        count = Transaction.bulk_create(non_duplicate_transactions) if non_duplicate_transactions else 0
         
         # Archive the CSV file
         if temp_file_path and os.path.exists(temp_file_path):
@@ -218,10 +234,17 @@ def confirm_import():
         session.pop('import_temp_file', None)
         session.pop('import_valid_count', None)
         
+        # Build response message
+        if duplicate_count > 0:
+            message = f'Successfully imported {count} new transactions. Skipped {duplicate_count} duplicate(s).'
+        else:
+            message = f'Successfully imported {count} transactions'
+        
         return jsonify({
             'success': True,
-            'message': f'Successfully imported {count} transactions',
+            'message': message,
             'count': count,
+            'duplicates_skipped': duplicate_count,
             'account_id': account_id
         })
     
