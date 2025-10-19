@@ -154,6 +154,25 @@
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #667eea #f0f0f0;
+}
+
+.category-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.category-list::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+.category-list::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 3px;
+}
+
+.category-list::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
 }
 
 .category-option {
@@ -190,14 +209,19 @@
 .category-option.new-category {
     color: #667eea;
     font-weight: 600;
-    border-top: 2px dashed #e0e0e0;
+    border-top: 2px dashed #667eea;
     margin-top: 5px;
-    background: #fafbfc;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e8f0fe 100%);
+    position: sticky;
+    bottom: 0;
+    box-shadow: 0 -2px 8px rgba(102, 126, 234, 0.1);
 }
 
 .category-option.new-category:hover {
-    background: #e8f0fe;
+    background: linear-gradient(135deg, #e8f0fe 0%, #d0e0ff 100%);
     border-top-style: solid;
+    border-top-color: #667eea;
+    box-shadow: 0 -2px 12px rgba(102, 126, 234, 0.2);
 }
 
 .category-badge {

@@ -7,7 +7,13 @@ from flask import Blueprint, render_template, jsonify, request, current_app, mak
 from datetime import datetime, date
 from io import StringIO
 import csv
-from src.services.report_service import ReportService
+import sys
+import os
+
+# Add src directory to path if needed
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+from services.report_service import ReportService
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
