@@ -23,7 +23,10 @@
             <div class="form-group">
                 <label for="file">CSV File:</label>
                 <input type="file" id="file" name="file" accept=".csv" required>
-                <small>Supported formats: CSV with Date, Description, Amount columns</small>
+                <small>
+                    <strong>Any bank CSV format supported!</strong> System auto-detects columns.<br>
+                    Need help? See <a href="https://github.com/saeid-h/financial-assistant/blob/main/docs/CSV-FORMAT-GUIDE.md" target="_blank" style="color: #667eea;">CSV Format Guide</a> for examples from Chase, Wells Fargo, Bank of America, etc.
+                </small>
             </div>
             
             <button type="submit" class="btn btn-primary">Upload and Preview</button>

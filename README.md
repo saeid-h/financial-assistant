@@ -95,7 +95,11 @@ A local web-based financial analysis application for tracking, categorizing, and
 
 ## Supported CSV Formats
 
-The application supports various CSV formats from different financial institutions:
+The application is designed to handle **CSV files from ANY financial institution** using intelligent column detection.
+
+📖 **[Complete CSV Format Guide](docs/CSV-FORMAT-GUIDE.md)** - Detailed documentation with examples from real banks
+
+### Quick Overview
 
 ### Format 1: Standard Bank Statement
 ```csv
