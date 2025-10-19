@@ -5,8 +5,12 @@ Import routes for CSV file upload and transaction import.
 from flask import Blueprint, render_template, request, jsonify, session, flash, redirect, url_for
 from werkzeug.utils import secure_filename
 import os
+import sys
 import tempfile
 from datetime import datetime
+
+# Add src directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from models.account import Account
 from models.transaction import Transaction
@@ -25,8 +29,11 @@ def allowed_file(filename):
 @import_bp.route('/')
 def import_page():
     """Show the import page."""
+    from flask import current_app
+    
     # Get all accounts for dropdown
-    accounts = Account.get_all()
+    account_model = Account(current_app.config['DATABASE'])
+    accounts = account_model.get_all()
     return render_template('import.html', accounts=accounts)
 
 
@@ -54,10 +61,12 @@ def upload_file():
         return jsonify({'error': 'Please select an account'}), 400
     
     try:
+        from flask import current_app
         account_id = int(account_id)
         
         # Verify account exists
-        account = Account.get_by_id(account_id)
+        account_model = Account(current_app.config['DATABASE'])
+        account = account_model.get_by_id(account_id)
         if not account:
             return jsonify({'error': f'Account with ID {account_id} not found'}), 404
         
