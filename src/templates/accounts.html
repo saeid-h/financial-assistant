@@ -366,6 +366,7 @@
                     <h3>${escapeHtml(account.name)}</h3>
                     <span class="account-type type-${account.type}">${capitalizeFirst(account.type)}</span>
                     ${account.institution ? `<div class="account-institution">${escapeHtml(account.institution)}</div>` : ''}
+                    ${account.current_balance !== undefined ? `<div class="account-balance" style="font-size: 1.3rem; font-weight: 700; margin: 10px 0; color: ${account.current_balance >= 0 ? '#28a745' : '#dc3545'};">Balance: ${formatCurrency(account.current_balance)}</div>` : ''}
                     <div class="account-date">Created: ${formatDate(account.created_at)}</div>
                     <div class="account-card-actions">
                         <a href="/accounts/${account.id}/details" class="btn btn-primary btn-small">View Transactions</a>
@@ -536,6 +537,13 @@
         function formatDate(dateStr) {
             const date = new Date(dateStr);
             return date.toLocaleDateString();
+        }
+        
+        function formatCurrency(amount) {
+            return '$' + Math.abs(amount).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
         }
         
         // Close modal on outside click
