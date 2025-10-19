@@ -446,3 +446,81 @@ def get_category_stats():
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@categories_bp.route('/api/recategorize-all', methods=['POST'])
+def recategorize_all_transactions():
+    """
+    Apply categorization rules to all uncategorized transactions.
+    This is useful when new rules are added or when importing old data.
+    """
+    try:
+        import sqlite3
+        
+        conn = sqlite3.connect(current_app.config['DATABASE'])
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Get all uncategorized transactions
+        cursor.execute("""
+            SELECT id, description, amount
+            FROM transactions
+            WHERE category_id IS NULL
+            ORDER BY date DESC
+        """)
+        
+        uncategorized = cursor.fetchall()
+        total_uncategorized = len(uncategorized)
+        
+        if total_uncategorized == 0:
+            conn.close()
+            return jsonify({
+                'success': True,
+                'total': 0,
+                'categorized': 0,
+                'success_rate': 100.0,
+                'message': 'All transactions are already categorized!'
+            })
+        
+        # Initialize categorization engine
+        engine = CategorizationEngine(current_app.config['DATABASE'])
+        
+        categorized_count = 0
+        
+        for txn in uncategorized:
+            # Create transaction dict
+            transaction = {
+                'id': txn['id'],
+                'description': txn['description'],
+                'amount': txn['amount']
+            }
+            
+            # Try to categorize
+            result = engine.categorize_transaction(transaction)
+            
+            if result and result['category_id']:
+                category_id = result['category_id']
+                
+                # Update transaction
+                cursor.execute("""
+                    UPDATE transactions 
+                    SET category_id = ?
+                    WHERE id = ?
+                """, (category_id, txn['id']))
+                
+                categorized_count += 1
+        
+        conn.commit()
+        conn.close()
+        
+        success_rate = (categorized_count / total_uncategorized * 100) if total_uncategorized > 0 else 0
+        
+        return jsonify({
+            'success': True,
+            'total': total_uncategorized,
+            'categorized': categorized_count,
+            'success_rate': round(success_rate, 1)
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

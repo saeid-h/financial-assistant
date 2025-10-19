@@ -6,7 +6,10 @@
 <div class="container">
     <div class="page-header">
         <h1>📊 Categories Overview</h1>
-        <a href="/categories/manage" class="btn btn-primary">⚙️ Manage Categories & Rules</a>
+        <div class="header-actions">
+            <button id="recategorize-all-btn" class="btn btn-success">🔄 Recategorize All</button>
+            <a href="/categories/manage" class="btn btn-primary">⚙️ Manage Categories & Rules</a>
+        </div>
     </div>
     
     <!-- Category Statistics -->
@@ -219,10 +222,50 @@
 </style>
 
 <script>
+// Recategorize all uncategorized transactions
+async function recategorizeAll() {
+    const btn = document.getElementById('recategorize-all-btn');
+    const originalText = btn.textContent;
+    
+    if (!confirm('This will apply categorization rules to all uncategorized transactions. Continue?')) {
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = '🔄 Recategorizing...';
+    
+    try {
+        const response = await fetch('/categories/api/recategorize-all', {
+            method: 'POST'
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ Recategorization complete!\n\n` +
+                  `Total uncategorized: ${data.total}\n` +
+                  `Successfully categorized: ${data.categorized}\n` +
+                  `Success rate: ${data.success_rate}%`);
+            
+            // Reload stats to show updated counts
+            loadCategoryStats();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to recategorize'));
+        }
+    } catch (error) {
+        alert('Error during recategorization: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadCategoryStats();
     loadCategoryHierarchy();
     loadRules();
+    
+    // Wire up recategorize button
+    document.getElementById('recategorize-all-btn').addEventListener('click', recategorizeAll);
 });
 
 async function loadCategoryStats() {
