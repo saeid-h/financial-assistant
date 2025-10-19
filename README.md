@@ -259,5 +259,6 @@ For questions or issues, refer to the documentation in the `docs/` directory or 
 ---
 
 **Version**: 1.0.0  
+**Author**: Saeed Hoss  
 **Last Updated**: 2025-10-19
 

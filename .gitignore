@@ -43,16 +43,29 @@ htmlcov/
 .tox/
 .hypothesis/
 
-# Database
+# Database - Exclude ALL database files except test DBs
 *.db
 *.sqlite
 *.sqlite3
 data/*.db
+!tests/**/*.db
 
 # Logs
 logs/
 *.log
 *.log.*
+
+# Financial Data Privacy - IMPORTANT!
+# Exclude all actual financial data and imported statements
+data/*/              # All subdirectories under data/ (YYYY/MM archives)
+data/**/*.csv        # All CSV files (bank statements)
+data/**/*.ofx        # OFX files
+data/**/*.qfx        # QFX files
+data/**/*.pdf        # PDF statements
+data/**/*.xlsx       # Excel files
+data/**/*.xls        # Excel files
+data/**/backups/     # Backup directories
+!data/.gitkeep       # Keep the .gitkeep file
 
 # Flask
 instance/
