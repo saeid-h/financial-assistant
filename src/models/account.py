@@ -111,7 +111,7 @@ class Account:
             conn.close()
     
     def update(self, account_id: int, name: str = None, 
-               account_type: str = None, institution: str = None) -> bool:
+               account_type: str = None, institution: str = None, initial_balance: float = None) -> bool:
         """
         Update an existing account.
         
@@ -120,6 +120,7 @@ class Account:
             name: New account name (optional)
             account_type: New account type (optional)
             institution: New institution (optional)
+            initial_balance: New initial balance (optional)
         
         Returns:
             True if updated, False if not found
@@ -151,6 +152,10 @@ class Account:
         if institution is not None:
             updates.append("institution = ?")
             params.append(institution)
+        
+        if initial_balance is not None:
+            updates.append("initial_balance = ?")
+            params.append(initial_balance)
         
         if not updates:
             return True  # Nothing to update

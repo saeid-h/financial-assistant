@@ -160,7 +160,8 @@ def update_account(account_id):
             account_id,
             name=data.get('name'),
             account_type=data.get('type'),
-            institution=data.get('institution')
+            institution=data.get('institution'),
+            initial_balance=data.get('initial_balance')
         )
         
         if not success:
