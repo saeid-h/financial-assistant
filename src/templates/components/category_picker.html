@@ -76,12 +76,13 @@
     position: absolute;
     max-width: 650px;
     width: 650px;
-    max-height: 420px;
+    max-height: 500px;
     background: white;
     border-radius: 10px;
     box-shadow: 0 8px 32px rgba(102, 126, 234, 0.25), 0 2px 8px rgba(0,0,0,0.1);
     z-index: 1001;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     animation: slideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid rgba(102, 126, 234, 0.1);
 }
@@ -98,7 +99,10 @@
 }
 
 .category-picker-body {
-    padding: 20px 0;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .breadcrumb {
@@ -120,7 +124,8 @@
 .category-columns {
     display: flex;
     gap: 1px;
-    min-height: 240px;
+    flex: 1;
+    min-height: 200px;
     background: #e0e0e0;
 }
 
@@ -143,7 +148,7 @@
 }
 
 .category-list {
-    max-height: 280px;
+    height: 100%;
     overflow-y: auto;
 }
 
@@ -290,7 +295,7 @@ function openCategoryPicker(transactionId, buttonElement) {
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
             
-            const pickerHeight = 420; // max-height of picker
+            const pickerHeight = 500; // max-height of picker
             const pickerWidth = 650;
             const gap = 10;
             
