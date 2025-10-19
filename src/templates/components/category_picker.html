@@ -208,20 +208,21 @@
 
 .category-option.new-category {
     color: #667eea;
-    font-weight: 600;
-    border-top: 2px dashed #667eea;
-    margin-top: 5px;
+    font-weight: 700;
+    border-bottom: 2px solid #667eea;
     background: linear-gradient(135deg, #f8f9ff 0%, #e8f0fe 100%);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+    margin: 0;
+    padding: 12px 14px;
     position: sticky;
-    bottom: 0;
-    box-shadow: 0 -2px 8px rgba(102, 126, 234, 0.1);
+    top: 0;
+    z-index: 10;
 }
 
 .category-option.new-category:hover {
     background: linear-gradient(135deg, #e8f0fe 0%, #d0e0ff 100%);
-    border-top-style: solid;
-    border-top-color: #667eea;
-    box-shadow: 0 -2px 12px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.25);
+    transform: scale(1.02);
 }
 
 .category-badge {
@@ -402,6 +403,13 @@ function showLevel1Categories() {
     const list = document.getElementById('level-1-list');
     list.innerHTML = '';
     
+    // Add "New Category Type" option FIRST (at top)
+    const newDiv = document.createElement('div');
+    newDiv.className = 'category-option new-category';
+    newDiv.innerHTML = `<span>➕ Add New Category Type...</span>`;
+    newDiv.onclick = () => promptNewCategory(null, 1);
+    list.appendChild(newDiv);
+    
     // Group by type
     const types = [
         { key: 'income', label: '💰 Income', icon: '💰' },
@@ -423,13 +431,6 @@ function showLevel1Categories() {
             list.appendChild(div);
         });
     });
-    
-    // Add "New Category Type" option
-    const newDiv = document.createElement('div');
-    newDiv.className = 'category-option new-category';
-    newDiv.innerHTML = `<span>➕ Add New Category Type...</span>`;
-    newDiv.onclick = () => promptNewCategory(null, 1);
-    list.appendChild(newDiv);
     
     // Hide level 2 and 3
     document.getElementById('level-2-column').style.display = 'none';
@@ -461,6 +462,13 @@ function showLevel2Categories(categories) {
     const list = document.getElementById('level-2-list');
     list.innerHTML = '';
     
+    // Add "New..." option FIRST (at top)
+    const newDiv = document.createElement('div');
+    newDiv.className = 'category-option new-category';
+    newDiv.innerHTML = `<span>➕ Add New ${selectedCategoryPath[0].name}...</span>`;
+    newDiv.onclick = () => promptNewCategory(selectedCategoryPath[0].id, 2);
+    list.appendChild(newDiv);
+    
     categories.forEach(cat => {
         const div = document.createElement('div');
         const hasChildren = allCategoriesForPicker.some(c => c.parent_id === cat.id);
@@ -472,13 +480,6 @@ function showLevel2Categories(categories) {
         div.onclick = () => selectLevel2(cat);
         list.appendChild(div);
     });
-    
-    // Add "New..." option
-    const newDiv = document.createElement('div');
-    newDiv.className = 'category-option new-category';
-    newDiv.innerHTML = `<span>➕ Add New ${selectedCategoryPath[0].name}...</span>`;
-    newDiv.onclick = () => promptNewCategory(selectedCategoryPath[0].id, 2);
-    list.appendChild(newDiv);
     
     document.getElementById('level-3-column').style.display = 'none';
 }
@@ -514,6 +515,13 @@ function showLevel3Categories(categories) {
     const list = document.getElementById('level-3-list');
     list.innerHTML = '';
     
+    // Add "New..." option FIRST (at top)
+    const newDiv = document.createElement('div');
+    newDiv.className = 'category-option new-category';
+    newDiv.innerHTML = `<span>➕ Add New ${selectedCategoryPath[1].name}...</span>`;
+    newDiv.onclick = () => promptNewCategory(selectedCategoryPath[1].id, 3);
+    list.appendChild(newDiv);
+    
     categories.forEach(cat => {
         const div = document.createElement('div');
         div.className = 'category-option';
@@ -524,13 +532,6 @@ function showLevel3Categories(categories) {
         div.onclick = () => selectLevel3(cat);
         list.appendChild(div);
     });
-    
-    // Add "New..." option
-    const newDiv = document.createElement('div');
-    newDiv.className = 'category-option new-category';
-    newDiv.innerHTML = `<span>➕ Add New ${selectedCategoryPath[1].name}...</span>`;
-    newDiv.onclick = () => promptNewCategory(selectedCategoryPath[1].id, 3);
-    list.appendChild(newDiv);
 }
 
 function selectLevel3(category) {
