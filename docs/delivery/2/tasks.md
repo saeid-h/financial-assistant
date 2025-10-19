@@ -8,7 +8,7 @@ This document lists all tasks associated with PBI 2.
 
 | Task ID | Name | Status | Description |
 | :--- | :--- | :---- | :--- |
-| 2-1 | [Create Account Management UI and API](./2-1.md) | Agreed | Build interface to create/list accounts (prerequisite for import) |
+| 2-1 | [Create Account Management UI and API](./2-1.md) | Done | Build interface to create/list accounts (prerequisite for import) |
 | 2-2 | [Create CSV Parser Service](./2-2.md) | Proposed | Implement flexible CSV parsing with pandas |
 | 2-3 | [Implement Transaction Validation Logic](./2-3.md) | Proposed | Validate dates, amounts, and required fields |
 | 2-4 | [Build Duplicate Detection Service](./2-4.md) | Proposed | Detect existing transactions to prevent duplicates |

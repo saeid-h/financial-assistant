@@ -35,6 +35,12 @@ def create_app():
 def register_routes(app):
     """Register all application routes."""
     
+    # Import blueprints
+    from routes.accounts import accounts_bp
+    
+    # Register blueprints
+    app.register_blueprint(accounts_bp)
+    
     @app.route('/')
     def index():
         """Home page route."""
