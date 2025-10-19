@@ -115,6 +115,26 @@
     border-left: 3px solid #667eea;
     background: #f8f9fa;
     border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-name {
+    flex: 1;
+}
+
+.count-badge {
+    background: #27ae60;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.count-badge.empty {
+    background: #95a5a6;
 }
 
 .category-item.level-1 {
@@ -188,32 +208,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadCategoryStats() {
     try {
-        // Get total categories
-        const catResponse = await fetch('/categories/api/all');
-        const catData = await catResponse.json();
+        const response = await fetch('/categories/api/stats');
+        const data = await response.json();
         
-        if (catData.success) {
-            document.getElementById('total-categories').textContent = catData.count;
+        if (data.success) {
+            const stats = data.stats;
+            document.getElementById('total-categories').textContent = stats.total_categories;
+            document.getElementById('total-rules').textContent = stats.total_rules;
+            document.getElementById('categorized-count').textContent = stats.categorized.toLocaleString();
+            document.getElementById('uncategorized-count').textContent = stats.uncategorized.toLocaleString();
         }
-        
-        // Get transaction stats
-        const txnResponse = await fetch('/transactions/api/stats');
-        const txnData = await txnResponse.json();
-        
-        if (txnData.success) {
-            const total = txnData.stats.total_transactions;
-            // Count categorized vs uncategorized (we'll get this from the API)
-            document.getElementById('categorized-count').textContent = '...';
-            document.getElementById('uncategorized-count').textContent = '...';
-        }
-        
-        // Get rules count
-        const db = await fetch('/admin/api/stats');
-        const dbData = await db.json();
-        
-        // For now, just placeholder
-        document.getElementById('total-rules').textContent = '56';
-        
     } catch (error) {
         console.error('Error loading stats:', error);
     }
@@ -221,13 +225,42 @@ async function loadCategoryStats() {
 
 async function loadCategoryHierarchy() {
     try {
-        const response = await fetch('/categories/api/hierarchy');
-        const data = await response.json();
+        // Get categories with transaction counts
+        const catResponse = await fetch('/categories/api/all');
+        const catData = await catResponse.json();
         
-        if (data.success) {
-            displayCategoryTree('income-categories', data.hierarchy.income);
-            displayCategoryTree('expense-categories', data.hierarchy.expense);
+        if (!catData.success) {
+            throw new Error('Failed to load categories');
         }
+        
+        // Build hierarchy manually with counts
+        const categories = catData.categories;
+        const catById = {};
+        categories.forEach(cat => {
+            cat.children = [];
+            catById[cat.id] = cat;
+        });
+        
+        const income = [];
+        const expense = [];
+        
+        categories.forEach(cat => {
+            if (cat.parent_id === null) {
+                if (cat.type === 'income') {
+                    income.push(cat);
+                } else {
+                    expense.push(cat);
+                }
+            } else {
+                const parent = catById[cat.parent_id];
+                if (parent) {
+                    parent.children.push(cat);
+                }
+            }
+        });
+        
+        displayCategoryTree('income-categories', income);
+        displayCategoryTree('expense-categories', expense);
     } catch (error) {
         console.error('Error loading hierarchy:', error);
     }
@@ -245,7 +278,16 @@ function displayCategoryTree(containerId, categories) {
 function displayCategoryItem(container, category) {
     const div = document.createElement('div');
     div.className = `category-item level-${category.level}`;
-    div.textContent = category.name;
+    
+    const count = category.transaction_count || 0;
+    const countBadge = count > 0 
+        ? `<span class="count-badge">${count} transactions</span>` 
+        : '<span class="count-badge empty">0</span>';
+    
+    div.innerHTML = `
+        <span class="category-name">${category.name}</span>
+        ${countBadge}
+    `;
     
     container.appendChild(div);
     
@@ -258,16 +300,43 @@ function displayCategoryItem(container, category) {
 }
 
 async function loadRules() {
-    // For now, just show placeholder
-    // In a full implementation, we'd fetch from /categories/api/rules
-    const tbody = document.getElementById('rules-tbody');
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="4" style="text-align: center; color: #999;">
-                56 categorization rules active (view in database)
-            </td>
-        </tr>
-    `;
+    try {
+        const response = await fetch('/categories/api/rules');
+        const data = await response.json();
+        
+        if (data.success) {
+            const tbody = document.getElementById('rules-tbody');
+            tbody.innerHTML = '';
+            
+            // Show top 20 rules
+            const topRules = data.rules.slice(0, 20);
+            
+            topRules.forEach(rule => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="pattern-badge">${rule.pattern}</span></td>
+                    <td>${rule.category_name}</td>
+                    <td><span class="priority-badge">${rule.priority}</span></td>
+                    <td><span class="match-count">${rule.match_count || 0}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            if (data.count > 20) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td colspan="4" style="text-align: center; color: #999; font-style: italic;">
+                        Showing top 20 of ${data.count} total rules
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading rules:', error);
+        const tbody = document.getElementById('rules-tbody');
+        tbody.innerHTML = '<tr><td colspan="4">Error loading rules</td></tr>';
+    }
 }
 </script>
 {% endblock %}

@@ -20,14 +20,27 @@ def categories_page():
 @categories_bp.route('/api/all', methods=['GET'])
 def get_all_categories():
     """
-    Get all categories.
+    Get all categories with transaction counts.
     
     Returns:
-        JSON list of categories
+        JSON list of categories with usage stats
     """
     try:
+        import sqlite3
         category_model = Category(current_app.config['DATABASE'])
         categories = category_model.get_all()
+        
+        # Get transaction count for each category
+        conn = sqlite3.connect(current_app.config['DATABASE'])
+        cursor = conn.cursor()
+        
+        for cat in categories:
+            cursor.execute("""
+                SELECT COUNT(*) FROM transactions WHERE category_id = ?
+            """, (cat['id'],))
+            cat['transaction_count'] = cursor.fetchone()[0]
+        
+        conn.close()
         
         return jsonify({
             'success': True,
@@ -230,3 +243,67 @@ def bulk_categorize():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+@categories_bp.route('/api/rules', methods=['GET'])
+def get_rules():
+    """Get all categorization rules."""
+    try:
+        import sqlite3
+        conn = sqlite3.connect(current_app.config['DATABASE'])
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT r.*, c.name as category_name, c.type as category_type
+            FROM categorization_rules r
+            JOIN categories c ON r.category_id = c.id
+            ORDER BY r.priority DESC, r.match_count DESC
+            LIMIT 100
+        """)
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return jsonify({'success': True, 'rules': [dict(row) for row in rows], 'count': len(rows)})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@categories_bp.route('/api/stats', methods=['GET'])
+def get_category_stats():
+    """Get categorization statistics."""
+    try:
+        import sqlite3
+        conn = sqlite3.connect(current_app.config['DATABASE'])
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM categories")
+        total_categories = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM categorization_rules")
+        total_rules = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM transactions WHERE category_id IS NOT NULL")
+        categorized = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM transactions WHERE category_id IS NULL")
+        uncategorized = cursor.fetchone()[0]
+        
+        total_transactions = categorized + uncategorized
+        rate = (categorized / total_transactions * 100) if total_transactions > 0 else 0
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'stats': {
+                'total_categories': total_categories,
+                'total_rules': total_rules,
+                'categorized': categorized,
+                'uncategorized': uncategorized,
+                'total_transactions': total_transactions,
+                'categorization_rate': round(rate, 1)
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
