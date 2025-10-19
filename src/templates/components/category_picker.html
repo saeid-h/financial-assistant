@@ -293,7 +293,7 @@ function openCategoryPicker(transactionId, buttonElement) {
         overlay.classList.add('active');
         document.getElementById('assign-category-btn').disabled = true;
         
-        // Position with FIXED - always relative to viewport (much simpler!)
+        // Position with FIXED - GUARANTEED to stay in viewport!
         if (buttonElement) {
             const rect = buttonElement.getBoundingClientRect();
             
@@ -307,25 +307,33 @@ function openCategoryPicker(transactionId, buttonElement) {
             
             let top, left;
             
-            // Vertical: try below, then above, then force to visible
+            // STEP 1: Calculate ideal position (below or above button)
             const spaceBelow = viewportHeight - rect.bottom;
             const spaceAbove = rect.top;
             
-            if (spaceBelow >= pickerHeight + margin) {
-                // Enough space below
-                top = Math.min(rect.bottom + gap, viewportHeight - pickerHeight - margin);
-            } else if (spaceAbove >= pickerHeight + margin) {
-                // Enough space above
-                top = Math.max(margin, rect.top - pickerHeight - gap);
+            // Prefer below, but use above if more space there
+            if (spaceBelow >= spaceAbove) {
+                // Try below
+                top = rect.bottom + gap;
             } else {
-                // Not enough either way - center in viewport
-                top = Math.max(margin, (viewportHeight - pickerHeight) / 2);
+                // Try above
+                top = rect.top - pickerHeight - gap;
             }
             
-            // Horizontal: align with button, shifted left, but keep in viewport
-            left = rect.left - 280;
+            // STEP 2: FORCE into viewport bounds (this is the KEY fix!)
+            const minTop = margin;
+            const maxTop = viewportHeight - pickerHeight - margin;
             
-            // Constrain to viewport
+            // If picker is too tall for viewport, center it
+            if (maxTop < minTop) {
+                top = (viewportHeight - pickerHeight) / 2;
+            } else {
+                // Clamp to valid range
+                top = Math.max(minTop, Math.min(top, maxTop));
+            }
+            
+            // STEP 3: Horizontal position
+            left = rect.left - 280;
             left = Math.max(margin, Math.min(left, viewportWidth - pickerWidth - margin));
             
             content.style.top = top + 'px';
