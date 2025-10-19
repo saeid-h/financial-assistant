@@ -38,7 +38,8 @@ class CSVParser:
     # Columns to ignore (optional metadata)
     IGNORED_COLUMNS = ['status', 'member name', 'member', 'account holder',
                       'card number', 'reference number', 'ref', 'balance',
-                      'type', 'check or slip #', 'check number', 'slip number']
+                      'type', 'check or slip #', 'check number', 'slip number',
+                      'transaction type']
     
     AMOUNT_COLUMNS = ['amount', 'transaction amount', 'value']
     
@@ -105,7 +106,7 @@ class CSVParser:
                         transactions.append(transaction)
                 except Exception as e:
                     # Log error but continue with other rows
-                    print(f"Warning: Could not parse row {index + 1}: {str(e)}")
+                    print(f"Warning: Could not parse row {int(index) + 1}: {str(e)}")
                     continue
             
             if not transactions:
@@ -127,17 +128,28 @@ class CSVParser:
         Read CSV with automatic delimiter detection.
         
         Tries common delimiters: comma, semicolon, tab
+        Handles misaligned headers (common in Chase CSVs)
         """
         # Check if file exists first
         import os
+        import csv
         if not os.path.exists(file_path):
             raise CSVParseError(f"File not found: {file_path}")
+        
+        # No special header correction needed - just use index_col=False everywhere
+        # This prevents pandas from auto-detecting the first column as an index
         
         delimiters = [',', ';', '\t', '|']
         
         for delimiter in delimiters:
             try:
-                df = pd.read_csv(file_path, delimiter=delimiter, encoding='utf-8-sig')
+                # Skip blank columns and handle trailing delimiters
+                df = pd.read_csv(file_path, delimiter=delimiter, encoding='utf-8-sig', 
+                               skip_blank_lines=True, index_col=False)
+                
+                # Remove completely empty columns (from trailing commas)
+                df = df.dropna(axis=1, how='all')
+                
                 # Check if we got multiple columns (successful delimiter detection)
                 if len(df.columns) > 1:
                     return df
@@ -146,7 +158,9 @@ class CSVParser:
         
         # Fallback: try default pandas detection
         try:
-            return pd.read_csv(file_path, encoding='utf-8-sig')
+            df = pd.read_csv(file_path, encoding='utf-8-sig', skip_blank_lines=True, index_col=False)
+            df = df.dropna(axis=1, how='all')
+            return df
         except Exception as e:
             raise CSVParseError(f"Could not read CSV with any common delimiter: {str(e)}")
     

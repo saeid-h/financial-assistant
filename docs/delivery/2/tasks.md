@@ -14,7 +14,7 @@ This document lists all tasks associated with PBI 2.
 | 2-4 | [Build Duplicate Detection Service](./2-4.md) | Done | Detect existing transactions to prevent duplicates |
 | 2-5 | [Create Import Upload UI](./2-5.md) | Done | Build web interface for file upload and account selection |
 | 2-6 | [Implement Transaction Storage Service](./2-6.md) | Done | Save validated transactions to database (consolidated into 2-5) |
-| 2-7 | [Add File Archiving Functionality](./2-7.md) | Proposed | Archive CSV files in YYYY/MM directory structure (future enhancement) |
+| 2-7 | [Add File Archiving Functionality](./2-7.md) | Done | Archive CSV files in YYYY/MM directory structure |
 | 2-8 | [Build Import Preview and Confirmation](./2-8.md) | Done | Show preview of transactions before final import (consolidated into 2-5) |
 | 2-9 | [Add Import Route and Controller](./2-9.md) | Done | Wire up all services into import workflow (consolidated into 2-5) |
 | 2-10 | [Write Integration Tests for Import Flow](./2-10.md) | Done | Test end-to-end import process (consolidated into 2-5) |
