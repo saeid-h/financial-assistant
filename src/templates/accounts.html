@@ -325,12 +325,18 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="edit-account-initial-balance">Reference Balance (as of account creation)</label>
+                    <label for="edit-account-initial-balance">Reference Balance</label>
                     <input type="number" id="edit-account-initial-balance" name="initial_balance" 
                            placeholder="0.00" step="0.01"
                            title="The balance when you started tracking this account">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-account-reference-date">Reference Date *</label>
+                    <input type="date" id="edit-account-reference-date" name="reference_date" required
+                           title="The date when the reference balance was accurate">
                     <small style="color: #666; display: block; margin-top: 5px;">
-                        Set the balance when you started importing transactions. Current balance will auto-calculate.
+                        Set the date and balance when you started tracking. Current balance = Reference balance + Sum of transactions after this date.
                     </small>
                 </div>
                 
@@ -386,7 +392,9 @@
                     ${account.institution ? `<div class="account-institution">${escapeHtml(account.institution)}</div>` : ''}
                     <div style="font-size: 0.9rem; color: #666; margin-top: 8px;">
                         <strong>Reference Balance:</strong> ${formatCurrency(account.initial_balance || 0)}
-                        <small style="color: #999; display: block; font-size: 0.85em;">Set when account was added</small>
+                        <small style="color: #999; display: block; font-size: 0.85em;">
+                            As of ${account.reference_date || 'account creation'}
+                        </small>
                     </div>
                     ${account.current_balance !== undefined ? `<div class="account-balance" style="font-size: 1.3rem; font-weight: 700; margin: 10px 0; color: ${account.current_balance >= 0 ? '#28a745' : '#dc3545'};">Current Balance: ${formatCurrency(account.current_balance)}</div>` : ''}
                     <div class="account-date" style="font-size: 0.85rem; color: #999;">Created: ${formatDate(account.created_at)}</div>
@@ -417,6 +425,7 @@
             document.getElementById('edit-account-type').value = account.type;
             document.getElementById('edit-account-institution').value = account.institution || '';
             document.getElementById('edit-account-initial-balance').value = account.initial_balance || 0;
+            document.getElementById('edit-account-reference-date').value = account.reference_date || new Date().toISOString().split('T')[0];
             document.getElementById('edit-modal-error').style.display = 'none';
             document.getElementById('edit-account-modal').classList.add('active');
         }
@@ -438,7 +447,8 @@
                 name: formData.get('name'),
                 type: formData.get('type'),
                 institution: formData.get('institution') || null,
-                initial_balance: parseFloat(formData.get('initial_balance')) || 0.0
+                initial_balance: parseFloat(formData.get('initial_balance')) || 0.0,
+                reference_date: formData.get('reference_date')
             };
             
             try {

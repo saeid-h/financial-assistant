@@ -278,6 +278,11 @@
         font-weight: bold;
     }
     
+    .amount-neutral {
+        color: #667eea;  /* Purple/blue for transfers (neutral) */
+        font-weight: bold;
+    }
+    
     .btn {
         padding: 8px 16px;
         border: none;
@@ -599,9 +604,17 @@
         transactions.forEach(txn => {
             const tr = document.createElement('tr');
             
-            const amountClass = txn.amount >= 0 ? 'amount-positive' : 'amount-negative';
-            const amountSign = txn.amount >= 0 ? '+' : '';
+            // Determine amount color based on category type
+            let amountClass;
+            if (txn.category_type === 'transfer') {
+                // Transfers are neutral (purple/blue)
+                amountClass = 'amount-neutral';
+            } else {
+                // Income/expenses are green/red
+                amountClass = txn.amount >= 0 ? 'amount-positive' : 'amount-negative';
+            }
             
+            const amountSign = txn.amount >= 0 ? '+' : '';
             const formattedAmount = formatCurrency(Math.abs(txn.amount)).replace('$', '');
             
             // Category display

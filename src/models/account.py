@@ -72,7 +72,7 @@ class Account:
         
         try:
             cursor.execute("""
-                SELECT id, name, type, institution, initial_balance, current_balance, created_at, updated_at
+                SELECT id, name, type, institution, initial_balance, current_balance, reference_date, created_at, updated_at
                 FROM accounts
                 ORDER BY created_at DESC
             """)
@@ -99,7 +99,7 @@ class Account:
         
         try:
             cursor.execute("""
-                SELECT id, name, type, institution, initial_balance, current_balance, created_at, updated_at
+                SELECT id, name, type, institution, initial_balance, current_balance, reference_date, created_at, updated_at
                 FROM accounts
                 WHERE id = ?
             """, (account_id,))
@@ -111,7 +111,8 @@ class Account:
             conn.close()
     
     def update(self, account_id: int, name: str = None, 
-               account_type: str = None, institution: str = None, initial_balance: float = None) -> bool:
+               account_type: str = None, institution: str = None, initial_balance: float = None,
+               reference_date: str = None) -> bool:
         """
         Update an existing account.
         
@@ -121,6 +122,7 @@ class Account:
             account_type: New account type (optional)
             institution: New institution (optional)
             initial_balance: New initial balance (optional)
+            reference_date: Date when initial_balance was set (optional, YYYY-MM-DD)
         
         Returns:
             True if updated, False if not found
@@ -156,6 +158,10 @@ class Account:
         if initial_balance is not None:
             updates.append("initial_balance = ?")
             params.append(initial_balance)
+        
+        if reference_date is not None:
+            updates.append("reference_date = ?")
+            params.append(reference_date)
         
         if not updates:
             return True  # Nothing to update

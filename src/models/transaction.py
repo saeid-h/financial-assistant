@@ -133,7 +133,7 @@ class Transaction:
         cursor = conn.cursor()
         
         query = """
-            SELECT t.*, c.name as category_name, a.name as account_name
+            SELECT t.*, c.name as category_name, c.type as category_type, a.name as account_name
             FROM transactions t
             LEFT JOIN categories c ON t.category_id = c.id
             LEFT JOIN accounts a ON t.account_id = a.id
@@ -167,7 +167,7 @@ class Transaction:
         cursor = conn.cursor()
         
         query = """
-            SELECT t.*, c.name as category_name, a.name as account_name
+            SELECT t.*, c.name as category_name, c.type as category_type, a.name as account_name
             FROM transactions t
             LEFT JOIN categories c ON t.category_id = c.id
             LEFT JOIN accounts a ON t.account_id = a.id
@@ -253,7 +253,7 @@ class Transaction:
         
         # Build query with filters
         query = """
-            SELECT DISTINCT t.*, c.name as category_name, a.name as account_name
+            SELECT DISTINCT t.*, c.name as category_name, c.type as category_type, a.name as account_name
             FROM transactions t
             LEFT JOIN categories c ON t.category_id = c.id
             LEFT JOIN accounts a ON t.account_id = a.id
