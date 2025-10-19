@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Net Worth Tracker - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>💎 Net Worth Tracker</h1>
+        <p style="color: #666;">Track your wealth over time and see your financial progress</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div class="stat-card" style="border: 2px solid #667eea;">
+            <div class="stat-label">Current Net Worth</div>
+            <div class="stat-value" id="current-worth" style="color: #667eea;">$0.00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Change from Start</div>
+            <div class="stat-value" id="total-change">$0.00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg Monthly Change</div>
+            <div class="stat-value" id="monthly-change">$0.00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Months Tracked</div>
+            <div class="stat-value" id="months-tracked">0</div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Net Worth Over Time</h2>
+        </div>
+        <div class="card-body">
+            <canvas id="networth-chart" height="80"></canvas>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #333;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+
+<script>
+async function loadNetWorth() {
+    try {
+        const response = await fetch('/reports/api/net-worth');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayNetWorth(data);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading net worth:', error);
+        alert('Error loading net worth data');
+    }
+}
+
+function displayNetWorth(data) {
+    const summary = data.summary;
+    
+    // Update summary cards
+    document.getElementById('current-worth').textContent = formatCurrency(summary.current_net_worth);
+    document.getElementById('total-change').textContent = formatCurrency(Math.abs(summary.total_change));
+    document.getElementById('monthly-change').textContent = formatCurrency(Math.abs(summary.avg_monthly_change));
+    document.getElementById('months-tracked').textContent = summary.months_tracked;
+    
+    // Color code changes
+    const changeEl = document.getElementById('total-change');
+    const monthlyEl = document.getElementById('monthly-change');
+    
+    if (summary.total_change > 0) {
+        changeEl.style.color = '#28a745';
+        changeEl.textContent = '+' + changeEl.textContent;
+    } else if (summary.total_change < 0) {
+        changeEl.style.color = '#dc3545';
+        changeEl.textContent = '-' + changeEl.textContent;
+    }
+    
+    if (summary.avg_monthly_change > 0) {
+        monthlyEl.style.color = '#28a745';
+        monthlyEl.textContent = '+' + monthlyEl.textContent;
+    } else if (summary.avg_monthly_change < 0) {
+        monthlyEl.style.color = '#dc3545';
+        monthlyEl.textContent = '-' + monthlyEl.textContent;
+    }
+    
+    // Create chart
+    const ctx = document.getElementById('networth-chart').getContext('2d');
+    
+    // Determine line color based on trend
+    const isIncreasing = summary.total_change >= 0;
+    const lineColor = isIncreasing ? 'rgba(40, 167, 69, 1)' : 'rgba(220, 53, 69, 1)';
+    const fillColor = isIncreasing ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)';
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.snapshots.map(s => {
+                const date = new Date(s.date + '-01');
+                return date.toLocaleDateString('en-US', {month: 'short', year: 'numeric'});
+            }),
+            datasets: [{
+                label: 'Net Worth',
+                data: data.snapshots.map(s => s.net_worth),
+                borderColor: lineColor,
+                backgroundColor: fillColor,
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: lineColor
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {display: false},
+                title: {display: false},
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Net Worth: $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2});
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 0});
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function formatCurrency(amount) {
+    return '$' + Math.abs(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('load-btn').addEventListener('click', loadNetWorth);
+    
+    // Auto-load on page open
+    loadNetWorth();
+});
+</script>
+{% endblock %}
+

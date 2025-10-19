@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Custom Report Builder - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>🔧 Custom Report Builder</h1>
+        <p style="color: #666;">Build your own custom reports with flexible metrics and groupings</p>
+    </div>
+
+    <!-- Report Configuration -->
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header">
+            <h2>Report Configuration</h2>
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Left Column -->
+                <div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px;">1️⃣ Select Metrics</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label><input type="checkbox" name="metric" value="income" checked> Income</label>
+                        <label><input type="checkbox" name="metric" value="expenses" checked> Expenses</label>
+                        <label><input type="checkbox" name="metric" value="net"> Net (Income - Expenses)</label>
+                        <label><input type="checkbox" name="metric" value="count"> Transaction Count</label>
+                        <label><input type="checkbox" name="metric" value="average"> Average Transaction</label>
+                    </div>
+                    
+                    <h3 style="font-size: 1.1rem; margin: 20px 0 15px 0;">2️⃣ Group By</h3>
+                    <select id="grouping" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                        <option value="category">Category</option>
+                        <option value="merchant">Merchant</option>
+                        <option value="account">Account</option>
+                        <option value="date">Month</option>
+                    </select>
+                </div>
+                
+                <!-- Right Column -->
+                <div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px;">3️⃣ Date Range</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px;">Date From</label>
+                            <input type="date" id="date-from" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px;">Date To</label>
+                            <input type="date" id="date-to" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                        </div>
+                    </div>
+                    
+                    <h3 style="font-size: 1.1rem; margin: 20px 0 15px 0;">4️⃣ Visualization</h3>
+                    <select id="viz-type" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                        <option value="table">Table</option>
+                        <option value="bar">Bar Chart</option>
+                        <option value="line">Line Chart</option>
+                        <option value="pie">Pie Chart</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <button id="generate-btn" class="btn btn-primary" style="padding: 12px 40px; font-size: 1.1rem;">📊 Generate Report</button>
+                <button id="export-btn" class="btn btn-success" style="padding: 12px 40px; font-size: 1.1rem; display: none;">📥 Export CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results-section" style="display: none;">
+        <div class="card">
+            <div class="card-header">
+                <h2>Report Results</h2>
+            </div>
+            <div class="card-body">
+                <canvas id="results-chart" style="display: none;" height="80"></canvas>
+                <div id="results-table"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+
+<script>
+let currentResults = null;
+let currentChart = null;
+
+async function generateReport() {
+    const btn = document.getElementById('generate-btn');
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    
+    try {
+        // Collect selected metrics
+        const metrics = Array.from(document.querySelectorAll('input[name="metric"]:checked'))
+            .map(cb => cb.value);
+        
+        if (metrics.length === 0) {
+            alert('Please select at least one metric');
+            return;
+        }
+        
+        const grouping = document.getElementById('grouping').value;
+        const dateFrom = document.getElementById('date-from').value;
+        const dateTo = document.getElementById('date-to').value;
+        const vizType = document.getElementById('viz-type').value;
+        
+        const response = await fetch('/reports/api/custom', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                metrics: metrics,
+                grouping: grouping,
+                date_from: dateFrom,
+                date_to: dateTo
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            currentResults = data.results;
+            displayResults(data.results, vizType);
+            document.getElementById('export-btn').style.display = 'inline-block';
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '📊 Generate Report';
+    }
+}
+
+function displayResults(results, vizType) {
+    document.getElementById('results-section').style.display = 'block';
+    
+    const chartCanvas = document.getElementById('results-chart');
+    const tableContainer = document.getElementById('results-table');
+    
+    if (vizType === 'table') {
+        chartCanvas.style.display = 'none';
+        tableContainer.style.display = 'block';
+        displayTable(results);
+    } else {
+        chartCanvas.style.display = 'block';
+        tableContainer.style.display = 'none';
+        displayChart(results, vizType);
+    }
+}
+
+function displayTable(results) {
+    const container = document.getElementById('results-table');
+    
+    if (!results || results.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">No data found</p>';
+        return;
+    }
+    
+    // Get column headers
+    const columns = Object.keys(results[0]);
+    
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr style="background: #f8f9fa; border-bottom: 2px solid #667eea;">';
+    
+    columns.forEach(col => {
+        html += `<th style="padding: 12px; text-align: left;">${capitalizeFirst(col)}</th>`;
+    });
+    
+    html += '</tr></thead><tbody>';
+    
+    results.forEach(row => {
+        html += '<tr style="border-bottom: 1px solid #eee;">';
+        columns.forEach(col => {
+            let value = row[col];
+            
+            // Format currency for amount columns
+            if (['income', 'expenses', 'total', 'net', 'average'].includes(col)) {
+                value = formatCurrency(value);
+            }
+            
+            html += `<td style="padding: 12px;">${value}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+function displayChart(results, vizType) {
+    const ctx = document.getElementById('results-chart').getContext('2d');
+    
+    if (currentChart) {
+        currentChart.destroy();
+    }
+    
+    const labels = results.map(r => r.group);
+    const firstMetric = Object.keys(results[0]).filter(k => k !== 'group')[0];
+    const values = results.map(r => r[firstMetric] || 0);
+    
+    const chartConfig = {
+        type: vizType,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: capitalizeFirst(firstMetric),
+                data: values,
+                backgroundColor: vizType === 'pie' ? generateColors(values.length) : 'rgba(102, 126, 234, 0.7)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {display: vizType === 'pie'},
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': $' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: vizType === 'pie' ? {} : {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    };
+    
+    currentChart = new Chart(ctx, chartConfig);
+}
+
+function generateColors(count) {
+    const colors = [
+        'rgba(102, 126, 234, 0.7)',
+        'rgba(220, 53, 69, 0.7)',
+        'rgba(40, 167, 69, 0.7)',
+        'rgba(255, 193, 7, 0.7)',
+        'rgba(23, 162, 184, 0.7)',
+        'rgba(111, 66, 193, 0.7)',
+        'rgba(253, 126, 20, 0.7)',
+        'rgba(232, 62, 140, 0.7)'
+    ];
+    
+    return Array.from({length: count}, (_, i) => colors[i % colors.length]);
+}
+
+function exportCSV() {
+    if (!currentResults) return;
+    
+    // Build CSV
+    const columns = Object.keys(currentResults[0]);
+    let csv = columns.join(',') + '\n';
+    
+    currentResults.forEach(row => {
+        csv += columns.map(col => row[col]).join(',') + '\n';
+    });
+    
+    // Download
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `custom_report_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+}
+
+function formatCurrency(amount) {
+    return '$' + Math.abs(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates (last 90 days)
+    const today = new Date();
+    const ninetyDaysAgo = new Date(today);
+    ninetyDaysAgo.setDate(today.getDate() - 90);
+    
+    document.getElementById('date-from').value = ninetyDaysAgo.toISOString().split('T')[0];
+    document.getElementById('date-to').value = today.toISOString().split('T')[0];
+    
+    document.getElementById('generate-btn').addEventListener('click', generateReport);
+    document.getElementById('export-btn').addEventListener('click', exportCSV);
+});
+</script>
+{% endblock %}
+

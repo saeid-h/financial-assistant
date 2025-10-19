@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Merchant Analysis - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>🏪 Merchant Analysis</h1>
+        <p style="color: #666;">See where you spend most and identify expensive vendors</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date From</label>
+                    <input type="date" id="date-from" class="form-control" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date To</label>
+                    <input type="date" id="date-to" class="form-control" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                </div>
+                <div>
+                    <button id="load-btn" class="btn btn-primary" style="width: 100%; padding: 10px;">Load Merchants</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header">
+            <h2>Top 10 Merchants by Spending</h2>
+        </div>
+        <div class="card-body">
+            <canvas id="merchants-chart" height="80"></canvas>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Top 50 Merchants</h2>
+            <input type="text" id="search-merchant" placeholder="Search merchants..." style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; width: 300px;">
+        </div>
+        <div class="card-body">
+            <div id="merchants-table"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+
+<script>
+let merchantChart = null;
+let allMerchants = [];
+
+async function loadMerchants() {
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
+    
+    const btn = document.getElementById('load-btn');
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+    
+    try {
+        let url = '/reports/api/merchants?';
+        if (dateFrom) url += `date_from=${dateFrom}&`;
+        if (dateTo) url += `date_to=${dateTo}&`;
+        url += 'limit=50';
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+            allMerchants = data.merchants;
+            displayMerchants(allMerchants);
+            displayChart(allMerchants.slice(0, 10));
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Load Merchants';
+    }
+}
+
+function displayMerchants(merchants) {
+    const container = document.getElementById('merchants-table');
+    
+    if (!merchants || merchants.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">No merchants found</p>';
+        return;
+    }
+    
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr style="background: #f8f9fa; border-bottom: 2px solid #667eea;">';
+    html += '<th style="padding: 12px; text-align: left;">#</th>';
+    html += '<th style="padding: 12px; text-align: left;">Merchant</th>';
+    html += '<th style="padding: 12px; text-align: right;">Total Spent</th>';
+    html += '<th style="padding: 12px; text-align: center;">Transactions</th>';
+    html += '<th style="padding: 12px; text-align: right;">Avg/Transaction</th>';
+    html += '<th style="padding: 12px; text-align: center;">Last Seen</th>';
+    html += '</tr></thead><tbody>';
+    
+    merchants.forEach((m, idx) => {
+        html += '<tr style="border-bottom: 1px solid #eee;">';
+        html += `<td style="padding: 12px;">${idx + 1}</td>`;
+        html += `<td style="padding: 12px;"><strong>${escapeHtml(m.merchant)}</strong></td>`;
+        html += `<td style="padding: 12px; text-align: right; color: #dc3545; font-weight: 700;">${formatCurrency(m.total_spent)}</td>`;
+        html += `<td style="padding: 12px; text-align: center;">${m.transaction_count}</td>`;
+        html += `<td style="padding: 12px; text-align: right;">${formatCurrency(m.average_transaction)}</td>`;
+        html += `<td style="padding: 12px; text-align: center;">${m.last_seen}</td>`;
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+function displayChart(topMerchants) {
+    const ctx = document.getElementById('merchants-chart').getContext('2d');
+    
+    if (merchantChart) {
+        merchantChart.destroy();
+    }
+    
+    merchantChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: topMerchants.map(m => m.merchant.substring(0, 20)),
+            datasets: [{
+                label: 'Total Spent',
+                data: topMerchants.map(m => m.total_spent),
+                backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                borderColor: 'rgba(220, 53, 69, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {display: false},
+                title: {display: false}
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function searchMerchants() {
+    const search = document.getElementById('search-merchant').value.toLowerCase();
+    
+    if (!search) {
+        displayMerchants(allMerchants);
+        return;
+    }
+    
+    const filtered = allMerchants.filter(m => 
+        m.merchant.toLowerCase().includes(search)
+    );
+    
+    displayMerchants(filtered);
+}
+
+function formatCurrency(amount) {
+    return '$' + Math.abs(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates (last 90 days)
+    const today = new Date();
+    const ninetyDaysAgo = new Date(today);
+    ninetyDaysAgo.setDate(today.getDate() - 90);
+    
+    document.getElementById('date-from').value = ninetyDaysAgo.toISOString().split('T')[0];
+    document.getElementById('date-to').value = today.toISOString().split('T')[0];
+    
+    document.getElementById('load-btn').addEventListener('click', loadMerchants);
+    document.getElementById('search-merchant').addEventListener('input', searchMerchants);
+    
+    // Auto-load
+    loadMerchants();
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Month Comparison - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>📅 Month-over-Month Comparison</h1>
+        <p style="color: #666;">Compare spending between any two months to identify trends</p>
+    </div>
+
+    <!-- Month Selectors -->
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: end;">
+                <div>
+                    <label for="month1" style="display: block; margin-bottom: 5px; font-weight: 600;">Month 1 (Base)</label>
+                    <input type="month" id="month1" class="form-control" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                </div>
+                <div>
+                    <label for="month2" style="display: block; margin-bottom: 5px; font-weight: 600;">Month 2 (Compare)</label>
+                    <input type="month" id="month2" class="form-control" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                </div>
+                <div>
+                    <button id="compare-btn" class="btn btn-primary" style="width: 100%; padding: 10px;">Compare</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div id="summary-cards" style="display: none; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div class="stat-card">
+                <div class="stat-label" id="month1-label">Month 1 Total</div>
+                <div class="stat-value" id="month1-total">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label" id="month2-label">Month 2 Total</div>
+                <div class="stat-value" id="month2-total">$0.00</div>
+            </div>
+            <div class="stat-card" id="variance-card">
+                <div class="stat-label">Change</div>
+                <div class="stat-value" id="variance-total">$0.00</div>
+                <div style="font-size: 0.9rem; margin-top: 5px;" id="variance-pct">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Category Comparison</h2>
+        </div>
+        <div class="card-body">
+            <div id="loading" style="text-align: center; padding: 40px; color: #999;">
+                Select two months and click "Compare" to see differences
+            </div>
+            <div id="comparison-table" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.comparison-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid #667eea;
+    font-weight: 700;
+}
+
+.comparison-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.comparison-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.variance-positive {
+    color: #28a745;
+    font-weight: 700;
+}
+
+.variance-negative {
+    color: #dc3545;
+    font-weight: 700;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #333;
+}
+</style>
+
+<script>
+async function compareMonths() {
+    const month1 = document.getElementById('month1').value;
+    const month2 = document.getElementById('month2').value;
+    
+    if (!month1 || !month2) {
+        alert('Please select both months');
+        return;
+    }
+    
+    const btn = document.getElementById('compare-btn');
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+    
+    try {
+        const response = await fetch(`/reports/api/month-comparison?month1=${month1}&month2=${month2}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayComparison(data);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Compare';
+    }
+}
+
+function displayComparison(data) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('summary-cards').style.display = 'block';
+    document.getElementById('comparison-table').style.display = 'block';
+    
+    // Update summary cards
+    const month1Date = new Date(data.month1 + '-01');
+    const month2Date = new Date(data.month2 + '-01');
+    
+    document.getElementById('month1-label').textContent = month1Date.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+    document.getElementById('month2-label').textContent = month2Date.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+    
+    document.getElementById('month1-total').textContent = formatCurrency(data.totals.month1);
+    document.getElementById('month2-total').textContent = formatCurrency(data.totals.month2);
+    document.getElementById('variance-total').textContent = formatCurrency(Math.abs(data.totals.variance));
+    document.getElementById('variance-pct').textContent = (data.totals.variance >= 0 ? '+' : '') + data.totals.variance_percent.toFixed(1) + '%';
+    
+    // Color variance card
+    const varianceCard = document.getElementById('variance-card');
+    if (data.totals.variance > 0) {
+        varianceCard.style.borderColor = '#dc3545';
+        document.getElementById('variance-total').style.color = '#dc3545';
+    } else if (data.totals.variance < 0) {
+        varianceCard.style.borderColor = '#28a745';
+        document.getElementById('variance-total').style.color = '#28a745';
+    }
+    
+    // Build comparison table
+    const tableContainer = document.getElementById('comparison-table');
+    
+    let html = '<table class="comparison-table"><thead><tr>';
+    html += '<th>Category</th>';
+    html += `<th>${month1Date.toLocaleDateString('en-US', {month: 'short', year: 'numeric'})}</th>`;
+    html += `<th>${month2Date.toLocaleDateString('en-US', {month: 'short', year: 'numeric'})}</th>`;
+    html += '<th>Change ($)</th>';
+    html += '<th>Change (%)</th>';
+    html += '</tr></thead><tbody>';
+    
+    data.comparison.forEach(row => {
+        const varianceClass = row.variance > 0 ? 'variance-negative' : (row.variance < 0 ? 'variance-positive' : '');
+        const arrow = row.variance > 0 ? '▲' : (row.variance < 0 ? '▼' : '—');
+        
+        html += '<tr>';
+        html += `<td><strong>${row.category}</strong></td>`;
+        html += `<td>${formatCurrency(row.month1_amount)}</td>`;
+        html += `<td>${formatCurrency(row.month2_amount)}</td>`;
+        html += `<td class="${varianceClass}">${arrow} ${formatCurrency(Math.abs(row.variance))}</td>`;
+        html += `<td class="${varianceClass}">${row.variance >= 0 ? '+' : ''}${row.variance_percent.toFixed(1)}%</td>`;
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    tableContainer.innerHTML = html;
+}
+
+function formatCurrency(amount) {
+    return '$' + Math.abs(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+// Set default months (this month vs last month)
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const thisMonth = today.toISOString().slice(0, 7);
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().slice(0, 7);
+    
+    document.getElementById('month1').value = lastMonth;
+    document.getElementById('month2').value = thisMonth;
+    
+    document.getElementById('compare-btn').addEventListener('click', compareMonths);
+});
+</script>
+{% endblock %}
+

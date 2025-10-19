@@ -81,7 +81,7 @@
             <a href="/" class="navbar-brand">💰 Financial Assistant</a>
             <ul class="navbar-menu">
                 <li><a href="/" {% if request.path == '/' %}class="active"{% endif %}>Home</a></li>
-                <li><a href="/dashboard" {% if request.path.startswith('/dashboard') %}class="active"{% endif %}>📊 Dashboard</a></li>
+                <li><a href="/dashboard" {% if request.path.startswith('/dashboard') %}class="active"{% endif %}>Dashboard</a></li>
                 <li><a href="/accounts" {% if request.path.startswith('/accounts') %}class="active"{% endif %}>Accounts</a></li>
                 <li><a href="/transactions" {% if request.path == '/transactions' %}class="active"{% endif %}>Transactions</a></li>
                 <li><a href="/categories" {% if request.path.startswith('/categories') %}class="active"{% endif %}>Categories</a></li>
