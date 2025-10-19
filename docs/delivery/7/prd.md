@@ -1,10 +1,11 @@
 # PBI-7: Budget Management System
 
-**Status**: Agreed  
+**Status**: Done  
 **Priority**: High (Phase 2)  
 **Owner**: Saeed  
 **Created**: 2025-10-20  
 **Started**: 2025-10-20  
+**Completed**: 2025-10-20  
 
 [Back to Backlog](../backlog.md)
 
