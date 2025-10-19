@@ -36,6 +36,12 @@ env/
 *~
 .DS_Store
 
+# Cursor IDE - Keep rules, ignore workspace state
+.cursor/chat/
+.cursor/workspace/
+.cursor/*.json
+!.cursor/rules/
+
 # Testing
 .pytest_cache/
 .coverage
