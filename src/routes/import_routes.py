@@ -107,11 +107,11 @@ def upload_file():
                     'errors': result.to_dict()['errors']
                 })
         
-        # Calculate summary statistics
-        # total_credits = money coming in (negative amounts, like payments/income)
-        # total_debits = money going out (positive amounts, like expenses/charges)
-        total_credits = sum(abs(txn['amount']) for txn in valid_transactions if txn['amount'] < 0)
-        total_debits = sum(txn['amount'] for txn in valid_transactions if txn['amount'] > 0)
+        # Calculate summary statistics (following accounting standards)
+        # total_credits = money coming in (positive amounts, deposits/income)
+        # total_debits = money going out (negative amounts, withdrawals/expenses)
+        total_credits = sum(txn['amount'] for txn in valid_transactions if txn['amount'] > 0)
+        total_debits = sum(abs(txn['amount']) for txn in valid_transactions if txn['amount'] < 0)
         
         # Store transactions in session for confirmation step
         # Convert dates to strings for JSON serialization

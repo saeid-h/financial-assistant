@@ -47,14 +47,15 @@ class TestCSVParser:
         
         assert len(transactions) == 4
         
-        # Debit should be positive (expenses/charges)
-        assert transactions[0]['amount'] == 45.50
+        # Following accounting standards:
+        # Debit (withdrawals/expenses) should be negative
+        assert transactions[0]['amount'] == -45.50
         
-        # Credit should be negative (income/payments)
-        assert transactions[1]['amount'] == -2500.00
+        # Credit (deposits/income) should be positive  
+        assert transactions[1]['amount'] == 2500.00
         
-        # Another debit
-        assert transactions[2]['amount'] == 1200.00
+        # Another debit (withdrawal)
+        assert transactions[2]['amount'] == -1200.00
     
     def test_parse_semicolon_delimiter(self, parser, fixtures_dir):
         """Test parsing CSV with semicolon delimiter."""
@@ -81,14 +82,14 @@ class TestCSVParser:
         
         assert len(transactions) == 3
         
-        # European format: 1.234,56 = 1234.56 (Withdrawal = positive)
-        assert transactions[0]['amount'] == 1234.56
+        # European format: 1.234,56 = 1234.56 (Withdrawal/Debit = negative)
+        assert transactions[0]['amount'] == -1234.56
         
-        # European format: 2.500,00 = 2500.00 (Deposit = negative)
-        assert transactions[1]['amount'] == -2500.00
+        # European format: 2.500,00 = 2500.00 (Deposit/Credit = positive)
+        assert transactions[1]['amount'] == 2500.00
         
-        # European format: 45,50 = 45.50 (Withdrawal = positive)
-        assert transactions[2]['amount'] == 45.50
+        # European format: 45,50 = 45.50 (Withdrawal/Debit = negative)
+        assert transactions[2]['amount'] == -45.50
     
     def test_parse_accounting_format(self, parser, fixtures_dir):
         """Test parsing accounting format with parentheses for negative."""

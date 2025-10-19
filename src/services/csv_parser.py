@@ -31,12 +31,14 @@ class CSVParser:
     DATE_COLUMNS = ['date', 'transaction date', 'posting date', 'trans date', 
                     'transaction_date', 'post date', 'value date']
     
-    DESCRIPTION_COLUMNS = ['description', 'merchant', 'payee', 'details', 
-                          'memo', 'narrative', 'particulars', 'reference']
+    # Description columns in priority order - 'description' before 'details'
+    DESCRIPTION_COLUMNS = ['description', 'merchant', 'payee', 'memo', 
+                          'narrative', 'particulars', 'reference', 'details']
     
     # Columns to ignore (optional metadata)
     IGNORED_COLUMNS = ['status', 'member name', 'member', 'account holder',
-                      'card number', 'reference number', 'ref', 'balance']
+                      'card number', 'reference number', 'ref', 'balance',
+                      'type', 'check or slip #', 'check number', 'slip number']
     
     AMOUNT_COLUMNS = ['amount', 'transaction amount', 'value']
     
@@ -227,22 +229,23 @@ class CSVParser:
             debit = self._parse_amount(row[column_map.get('debit', 'debit')]) if column_map.get('debit') else 0.0
             credit = self._parse_amount(row[column_map.get('credit', 'credit')]) if column_map.get('credit') else 0.0
             
-            # For CREDIT CARD statements (from user's perspective):
-            # - Debit column = Charges/Purchases = POSITIVE (you owe more)
-            # - Credit column = Payments/Returns = NEGATIVE (you owe less)
+            # Following ACCOUNTING STANDARDS from customer's perspective:
             # 
-            # For BANK ACCOUNTS it's the same:
-            # - Debit = Withdrawals = POSITIVE (money out)
-            # - Credit = Deposits/Refunds = NEGATIVE (money in)
+            # BANK ACCOUNT (Asset):
+            # - Credit (deposits/income) = POSITIVE (increases asset)
+            # - Debit (withdrawals/expenses) = NEGATIVE (decreases asset)
+            # 
+            # CREDIT CARD (Liability):
+            # - Debit (payments) = POSITIVE (decreases liability) 
+            # - Credit (charges) = NEGATIVE (increases liability)
             #
-            # This matches user's mental model where:
-            # - Expenses are positive (money going out or debt increasing)
-            # - Income/payments/returns are negative (money coming in or debt decreasing)
+            # Summary: Money IN or Debt DOWN = POSITIVE
+            #          Money OUT or Debt UP = NEGATIVE
             
-            if debit != 0.0:
-                amount = abs(debit)  # Charges/withdrawals are positive
-            elif credit != 0.0:
-                amount = -abs(credit)  # Payments/returns are negative
+            if credit != 0.0:
+                amount = abs(credit)  # Credits are positive (deposits/income)
+            elif debit != 0.0:
+                amount = -abs(debit)  # Debits are negative (withdrawals/expenses)
             else:
                 return None  # No transaction amount
         
