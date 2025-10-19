@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Reports{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+    <h1>Financial Reports</h1>
+    
+    <!-- Filters Section -->
+    <div class="report-filters">
+        <div class="filter-group">
+            <label for="date-range">Date Range:</label>
+            <select id="date-range" class="form-control">
+                <option value="this-month">This Month</option>
+                <option value="last-month">Last Month</option>
+                <option value="last-3-months">Last 3 Months</option>
+                <option value="last-6-months">Last 6 Months</option>
+                <option value="last-12-months" selected>Last 12 Months</option>
+                <option value="this-year">This Year</option>
+                <option value="last-year">Last Year</option>
+                <option value="custom">Custom Range...</option>
+            </select>
+        </div>
+        
+        <div class="filter-group" id="custom-dates" style="display: none;">
+            <input type="date" id="start-date" class="form-control">
+            <span class="date-separator">to</span>
+            <input type="date" id="end-date" class="form-control">
+        </div>
+        
+        <div class="filter-group">
+            <label for="account-filter">Account:</label>
+            <select id="account-filter" class="form-control">
+                <option value="all">All Accounts</option>
+                <!-- Populated dynamically -->
+            </select>
+        </div>
+        
+        <div class="filter-actions">
+            <button id="apply-filters" class="btn btn-primary">Apply Filters</button>
+            <button id="reset-filters" class="btn btn-secondary">Reset</button>
+            <button id="export-csv" class="btn btn-success">Export CSV</button>
+        </div>
+    </div>
+    
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+        <!-- Income vs Expenses Line Chart -->
+        <div class="chart-card">
+            <h3>Income vs Expenses</h3>
+            <div class="chart-loading" id="income-expense-loading">
+                <div class="spinner"></div>
+                <span>Loading chart...</span>
+            </div>
+            <div class="chart-container" id="income-expense-container" style="display: none;">
+                <canvas id="income-expense-chart"></canvas>
+            </div>
+            <div class="chart-error" id="income-expense-error" style="display: none;">
+                <p>Unable to load chart. Please try again.</p>
+            </div>
+            <div class="chart-empty" id="income-expense-empty" style="display: none;">
+                <p>No data available for the selected period.</p>
+            </div>
+        </div>
+        
+        <!-- Category Pie Chart -->
+        <div class="chart-card">
+            <h3>This Period's Spending</h3>
+            <div class="chart-loading" id="category-pie-loading">
+                <div class="spinner"></div>
+                <span>Loading chart...</span>
+            </div>
+            <div class="chart-container" id="category-pie-container" style="display: none;">
+                <canvas id="category-pie-chart"></canvas>
+            </div>
+            <div class="chart-error" id="category-pie-error" style="display: none;">
+                <p>Unable to load chart. Please try again.</p>
+            </div>
+            <div class="chart-empty" id="category-pie-empty" style="display: none;">
+                <p>No spending data available.</p>
+            </div>
+        </div>
+        
+        <!-- Monthly Category Trends Stacked Bar Chart -->
+        <div class="chart-card full-width">
+            <h3>Monthly Expenses by Category</h3>
+            <div class="chart-loading" id="monthly-category-loading">
+                <div class="spinner"></div>
+                <span>Loading chart...</span>
+            </div>
+            <div class="chart-container" id="monthly-category-container" style="display: none;">
+                <canvas id="monthly-category-chart"></canvas>
+            </div>
+            <div class="chart-error" id="monthly-category-error" style="display: none;">
+                <p>Unable to load chart. Please try again.</p>
+            </div>
+            <div class="chart-empty" id="monthly-category-empty" style="display: none;">
+                <p>No monthly data available.</p>
+            </div>
+        </div>
+        
+        <!-- Top Categories Horizontal Bar Chart -->
+        <div class="chart-card full-width">
+            <h3>Top Spending Categories</h3>
+            <div class="chart-loading" id="top-categories-loading">
+                <div class="spinner"></div>
+                <span>Loading chart...</span>
+            </div>
+            <div class="chart-container" id="top-categories-container" style="display: none;">
+                <canvas id="top-categories-chart"></canvas>
+            </div>
+            <div class="chart-error" id="top-categories-error" style="display: none;">
+                <p>Unable to load chart. Please try again.</p>
+            </div>
+            <div class="chart-empty" id="top-categories-empty" style="display: none;">
+                <p>No category data available.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Placeholder for chart initialization
+console.log('Reports page loaded');
+console.log('Chart.js version:', Chart.version);
+
+// Placeholder functions (to be implemented in subsequent tasks)
+function loadAccounts() {
+    console.log('loadAccounts() - to be implemented');
+}
+
+function loadIncomeExpenseChart() {
+    console.log('loadIncomeExpenseChart() - to be implemented');
+    document.getElementById('income-expense-loading').style.display = 'none';
+    document.getElementById('income-expense-empty').style.display = 'block';
+}
+
+function loadCategoryPieChart() {
+    console.log('loadCategoryPieChart() - to be implemented');
+    document.getElementById('category-pie-loading').style.display = 'none';
+    document.getElementById('category-pie-empty').style.display = 'block';
+}
+
+function loadMonthlyCategoryChart() {
+    console.log('loadMonthlyCategoryChart() - to be implemented');
+    document.getElementById('monthly-category-loading').style.display = 'none';
+    document.getElementById('monthly-category-empty').style.display = 'block';
+}
+
+function loadTopCategoriesChart() {
+    console.log('loadTopCategoriesChart() - to be implemented');
+    document.getElementById('top-categories-loading').style.display = 'none';
+    document.getElementById('top-categories-empty').style.display = 'block';
+}
+
+function refreshAllCharts() {
+    console.log('Refreshing all charts...');
+    loadIncomeExpenseChart();
+    loadCategoryPieChart();
+    loadMonthlyCategoryChart();
+    loadTopCategoriesChart();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing reports page...');
+    loadAccounts();
+    refreshAllCharts();
+    
+    // Wire up filter controls
+    document.getElementById('apply-filters').addEventListener('click', refreshAllCharts);
+    
+    document.getElementById('reset-filters').addEventListener('click', () => {
+        document.getElementById('date-range').value = 'last-12-months';
+        document.getElementById('account-filter').value = 'all';
+        document.getElementById('custom-dates').style.display = 'none';
+        refreshAllCharts();
+    });
+    
+    // Show/hide custom date inputs
+    document.getElementById('date-range').addEventListener('change', (e) => {
+        const customDates = document.getElementById('custom-dates');
+        customDates.style.display = e.target.value === 'custom' ? 'flex' : 'none';
+    });
+    
+    // Export placeholder
+    document.getElementById('export-csv').addEventListener('click', () => {
+        alert('Export functionality will be implemented in task 5-8');
+    });
+});
+</script>
+{% endblock %}
+

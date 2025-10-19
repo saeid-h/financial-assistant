@@ -50,6 +50,7 @@ def register_routes(app):
     from routes.transactions import transactions_bp
     from routes.admin import admin_bp
     from routes.categories import categories_bp
+    from routes.reports import reports_bp
     
     # Register blueprints
     app.register_blueprint(accounts_bp)
@@ -57,6 +58,7 @@ def register_routes(app):
     app.register_blueprint(transactions_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(categories_bp)
+    app.register_blueprint(reports_bp)
     
     @app.route('/')
     def index():
