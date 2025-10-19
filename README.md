@@ -244,7 +244,9 @@ The app now uses port 5001 by default to avoid conflicts with macOS AirPlay on p
 
 ## License
 
-This is a personal financial management tool. All rights reserved.
+MIT License - see [LICENSE](LICENSE) file for details.
+
+This is open source software. You are free to use, modify, and distribute it.
 
 ## Privacy
 

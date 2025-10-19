@@ -12,8 +12,8 @@ This backlog contains all Product Backlog Items (PBIs) for the Financial Assista
 
 | ID | Actor | User Story | Status | Conditions of Satisfaction (CoS) |
 |----|-------|------------|--------|----------------------------------|
-| 1 | Developer | As a developer, I want to set up the project infrastructure so that I have a solid foundation for building features | Proposed | [Details](./1/prd.md) - Git repo initialized, Python venv created, Flask app running, database schema created, remote repo configured, tests passing |
-| 2 | User | As a user, I want to import my bank statements from CSV files so that I can analyze my financial transactions | Proposed | [Details](./2/prd.md) - Upload CSV via UI, parse transactions, validate data, detect duplicates, store in database, handle updates, archive files by date |
+| 1 | Developer | As a developer, I want to set up the project infrastructure so that I have a solid foundation for building features | Done | [Details](./1/prd.md) - ✅ Git repo initialized, Python venv created, Flask app running, database schema created, tests passing (13/13) |
+| 2 | User | As a user, I want to import my bank statements from CSV files so that I can analyze my financial transactions | Agreed | [Details](./2/prd.md) - Upload CSV via UI, parse transactions, validate data, detect duplicates, store in database, handle updates, archive files by date |
 | 3 | User | As a user, I want to manage multiple bank accounts so that I can track all my finances in one place | Proposed | [Details](./3/prd.md) - Create/edit/delete accounts, view account list, link transactions to accounts, account-specific views |
 | 4 | User | As a user, I want transactions automatically categorized so that I don't have to manually categorize every transaction | Proposed | [Details](./4/prd.md) - 2-3 level category hierarchy, predefined categories, pattern-based auto-categorization, user confirmation workflow, learn from corrections, manual override |
 | 5 | User | As a user, I want to see visual reports of my spending so that I can understand my financial patterns | Proposed | [Details](./5/prd.md) - Monthly expense charts, income vs expenses timeline, category trends, year-over-year comparison, date range filtering, CSV export |
@@ -29,6 +29,8 @@ This backlog contains all Product Backlog Items (PBIs) for the Financial Assista
 | Timestamp | PBI_ID | Event_Type | Details | User |
 |-----------|--------|------------|---------|------|
 | 2025-10-19 00:00:00 | ALL | Created | Initial backlog created with 11 PBIs across 4 phases | Saeed |
+| 2025-10-19 18:30:00 | 1 | Status Change | PBI 1 moved from Proposed to Done - All infrastructure complete, 13 tests passing, Flask app running on port 5001 | Saeed |
+| 2025-10-19 18:30:00 | 2 | Status Change | PBI 2 moved from Proposed to Agreed - Ready to begin CSV import implementation | Saeed |
 
 ## Phase Breakdown
 
