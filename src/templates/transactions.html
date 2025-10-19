@@ -515,7 +515,25 @@
         const displayName = getCategoryDisplayName(currentCategoryId);
         const buttonClass = currentCategoryId ? 'category-btn categorized' : 'category-btn uncategorized';
         
-        return `<button class="${buttonClass}" onclick="openCategoryPicker(${transactionId})">${displayName}</button>`;
+        return `<button class="${buttonClass}" onclick="event.stopPropagation(); openCategoryPickerSafe(${transactionId}, this)">${displayName}</button>`;
+    }
+    
+    // Safe wrapper for opening category picker
+    function openCategoryPickerSafe(transactionId, buttonElement) {
+        try {
+            console.log('Opening category picker for transaction:', transactionId);
+            
+            if (typeof openCategoryPicker === 'undefined') {
+                console.error('openCategoryPicker function not defined!');
+                alert('Category picker not loaded. Please refresh the page.');
+                return;
+            }
+            
+            openCategoryPicker(transactionId, buttonElement);
+        } catch (error) {
+            console.error('Error opening category picker:', error);
+            alert('Error opening category picker: ' + error.message);
+        }
     }
     
     // Display transactions in table
