@@ -271,16 +271,22 @@ def confirm_import():
         session.pop('import_valid_count', None)
         
         # Build response message
+        message_parts = [f'Successfully imported {count} new transactions']
+        
         if duplicate_count > 0:
-            message = f'Successfully imported {count} new transactions. Skipped {duplicate_count} duplicate(s).'
-        else:
-            message = f'Successfully imported {count} transactions'
+            message_parts.append(f'Skipped {duplicate_count} duplicate(s)')
+        
+        if categorized_count > 0:
+            message_parts.append(f'Auto-categorized {categorized_count} transactions')
+        
+        message = '. '.join(message_parts) + '.'
         
         return jsonify({
             'success': True,
             'message': message,
             'count': count,
             'duplicates_skipped': duplicate_count,
+            'categorized': categorized_count,
             'account_id': account_id
         })
     
