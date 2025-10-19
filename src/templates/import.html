@@ -260,6 +260,16 @@
     const confirmBtn = document.getElementById('confirm-btn');
     const cancelBtn = document.getElementById('cancel-btn');
     
+    // Format number with thousands separator: $###,###.##
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    }
+    
     // Handle file upload
     uploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -311,11 +321,11 @@
             </div>
             <div class="stat">
                 <div class="stat-label">Total Credits</div>
-                <div class="stat-value positive">$${data.total_credits.toFixed(2)}</div>
+                <div class="stat-value positive">${formatCurrency(data.total_credits)}</div>
             </div>
             <div class="stat">
                 <div class="stat-label">Total Debits</div>
-                <div class="stat-value negative">$${data.total_debits.toFixed(2)}</div>
+                <div class="stat-value negative">${formatCurrency(data.total_debits)}</div>
             </div>
         `;
         
@@ -341,7 +351,7 @@
                 <td>${txn.date}</td>
                 <td>${txn.description}</td>
                 <td style="color: ${txn.amount >= 0 ? '#10b981' : '#ef4444'}">
-                    $${txn.amount.toFixed(2)}
+                    ${formatCurrency(txn.amount)}
                 </td>
             </tr>
         `).join('');

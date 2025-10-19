@@ -266,6 +266,16 @@
 <script>
     let currentAccountFilter = '';
     
+    // Format number with thousands separator
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    }
+    
     // Load transactions on page load
     document.addEventListener('DOMContentLoaded', function() {
         loadAccounts();
@@ -304,10 +314,10 @@
             const data = await response.json();
             
             if (data.success) {
-                document.getElementById('total-transactions').textContent = data.stats.total_transactions;
-                document.getElementById('total-income').textContent = `$${Math.abs(data.stats.total_income).toFixed(2)}`;
-                document.getElementById('total-expenses').textContent = `$${data.stats.total_expenses.toFixed(2)}`;
-                document.getElementById('net-flow').textContent = `$${data.stats.net_cash_flow.toFixed(2)}`;
+                document.getElementById('total-transactions').textContent = data.stats.total_transactions.toLocaleString();
+                document.getElementById('total-income').textContent = formatCurrency(Math.abs(data.stats.total_income));
+                document.getElementById('total-expenses').textContent = formatCurrency(data.stats.total_expenses);
+                document.getElementById('net-flow').textContent = formatCurrency(data.stats.net_cash_flow);
             }
         } catch (error) {
             console.error('Error loading stats:', error);
@@ -366,11 +376,13 @@
             const amountClass = txn.amount >= 0 ? 'amount-positive' : 'amount-negative';
             const amountSign = txn.amount >= 0 ? '+' : '';
             
+            const formattedAmount = formatCurrency(Math.abs(txn.amount)).replace('$', '');
+            
             tr.innerHTML = `
                 <td>${txn.date}</td>
                 <td>${txn.account_name || 'Unknown'}</td>
                 <td>${txn.description}</td>
-                <td class="${amountClass}">${amountSign}$${Math.abs(txn.amount).toFixed(2)}</td>
+                <td class="${amountClass}">${amountSign}$${formattedAmount}</td>
                 <td>
                     <button class="btn btn-danger" onclick="deleteTransaction(${txn.id})">Delete</button>
                 </td>
