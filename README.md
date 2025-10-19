@@ -80,14 +80,16 @@ A local web-based financial analysis application for tracking, categorizing, and
    
    Once the server is running, open your web browser and navigate to:
    ```
-   http://localhost:5000
+   http://localhost:5001
    ```
    
    You should see the Flask server output in terminal:
    ```
-   Server running at: http://localhost:5000
+   Server running at: http://localhost:5001
    Press CTRL+C to stop the server
    ```
+   
+   **Note**: Using port 5001 because port 5000 is used by macOS AirPlay on Mac systems.
    
    **Important**: The Flask application must be running for the browser to access it!
 
@@ -186,11 +188,11 @@ The project uses pytest for testing:
 
 ## Troubleshooting
 
-### Cannot Access localhost:5000
+### Cannot Access localhost:5001 (or 5000)
 
 **Problem**: Browser shows "access denied" or "connection refused"
 
-**Solution**: The Flask application is not running. You must start it first:
+**Solution 1**: The Flask application is not running. You must start it first:
 ```bash
 cd /path/to/financial-assistant
 ./start.sh
@@ -201,10 +203,16 @@ Keep the terminal window open while using the application. You should see:
 ============================================================
 Financial Assistant - Starting...
 ============================================================
-Server running at: http://localhost:5000
+Server running at: http://localhost:5001
 ```
 
-Then access http://localhost:5000 in your browser.
+Then access http://localhost:5001 in your browser.
+
+**Solution 2**: Port 5000 is used by macOS AirPlay
+On macOS, port 5000 is often occupied by the AirPlay Receiver service. This app now uses port 5001 instead. If you need to use port 5000:
+1. Go to System Settings > General > AirDrop & Handoff
+2. Disable "AirPlay Receiver"
+3. Edit `src/app.py` and change port back to 5000
 
 ### Virtual Environment Issues
 
@@ -232,11 +240,7 @@ python src/init_db.py --reset
 
 ### Port Already in Use
 
-If port 5000 is already in use:
-```bash
-# Run on different port
-python src/app.py --port 5001
-```
+The app now uses port 5001 by default to avoid conflicts with macOS AirPlay on port 5000. If you need a different port, edit `src/app.py` and change the port number in the `app.run()` call.
 
 ## License
 

@@ -32,27 +32,30 @@ You should see output like this:
 Starting Financial Assistant...
 ================================
 Starting Flask server...
-Access the application at: http://localhost:5000
+Access the application at: http://localhost:5001
+Note: Using port 5001 (port 5000 is used by macOS AirPlay)
 Press CTRL+C to stop the server
 ================================
 
 ============================================================
 Financial Assistant - Starting...
 ============================================================
-Server running at: http://localhost:5000
+Server running at: http://localhost:5001
 Database location: /Volumes/SSD/projects/financial-assistant/data/financial_assistant.db
 Press CTRL+C to stop the server
 ============================================================
+NOTE: Using port 5001 because port 5000 is used by macOS AirPlay
+
  * Serving Flask app 'app'
  * Debug mode: on
- * Running on http://127.0.0.1:5000
+ * Running on http://127.0.0.1:5001
 ```
 
 **Step 3: Open Your Browser**
 
 Now that the server is running, open your browser and go to:
 ```
-http://localhost:5000
+http://localhost:5001
 ```
 
 You should see the Financial Assistant home page! 🎉
@@ -86,19 +89,27 @@ python src/app.py
 
 ## Common Issues
 
-### Port Already in Use
+### Port 5000 vs 5001 - Why the Change?
 
-If you see "Address already in use":
+**macOS Issue**: On Mac, port 5000 is often used by the AirPlay Receiver service. That's why you got "access denied"!
+
+**Solution**: This app now uses **port 5001** instead.
+
+If you still see "Address already in use" for port 5001:
 ```bash
-# Find what's using port 5000
-lsof -ti:5000
+# Find what's using port 5001
+lsof -ti:5001
 
 # Kill that process
-kill -9 $(lsof -ti:5000)
+kill -9 $(lsof -ti:5001)
 
 # Then start again
 ./start.sh
 ```
+
+To use port 5000 (if you really want to):
+1. Disable AirPlay Receiver in System Settings
+2. Edit `src/app.py` and change `port=5001` to `port=5000`
 
 ### Virtual Environment Not Activated
 
@@ -118,7 +129,7 @@ python src/init_db.py
 ## Development Workflow
 
 1. **Morning**: Start the Flask server (`./start.sh`)
-2. **Work**: Keep browser tab open to http://localhost:5000
+2. **Work**: Keep browser tab open to http://localhost:5001
 3. **Make Changes**: Edit code, refresh browser to see changes
 4. **Evening**: Stop server (CTRL+C in terminal)
 
@@ -137,6 +148,8 @@ Keep your original terminal with Flask running!
 
 **Next Steps:**
 - Start the server using `./start.sh`
-- Access http://localhost:5000 in your browser
+- Access http://localhost:5001 in your browser
 - Begin using the Financial Assistant!
+
+**Remember**: Port 5001, not 5000 (macOS AirPlay uses 5000)
 

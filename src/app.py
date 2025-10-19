@@ -71,12 +71,15 @@ def main():
     print("=" * 60)
     print("Financial Assistant - Starting...")
     print("=" * 60)
-    print(f"Server running at: http://localhost:5000")
+    print(f"Server running at: http://localhost:5001")
     print(f"Database location: {app.config['DATABASE']}")
     print("Press CTRL+C to stop the server")
     print("=" * 60)
+    print("")
+    print("NOTE: Using port 5001 because port 5000 is used by macOS AirPlay")
+    print("")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)
 
 if __name__ == '__main__':
     main()
