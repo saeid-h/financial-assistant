@@ -18,6 +18,7 @@ from services.csv_parser import CSVParser, CSVParseError
 from services.transaction_validator import TransactionValidator
 from services.file_archiver import FileArchiver
 from services.duplicate_detector import DuplicateDetector
+from services.categorization_engine import CategorizationEngine
 
 import_bp = Blueprint('import', __name__, url_prefix='/import')
 
@@ -220,7 +221,27 @@ def confirm_import():
         print(f"Duplicates: {duplicate_count}")
         print(f"=====================================\n")
         
-        # Save non-duplicate transactions to database
+        # Auto-categorize new transactions
+        print(f"\n=== AUTO-CATEGORIZATION START ===")
+        categorization_engine = CategorizationEngine(current_app.config['DATABASE'])
+        categorized_count = 0
+        
+        for txn in non_duplicate_transactions:
+            result = categorization_engine.categorize_transaction(txn)
+            
+            if result['category_id']:
+                txn['category_id'] = result['category_id']
+                categorized_count += 1
+                
+                if categorized_count <= 3:  # Debug first 3
+                    print(f"✓ Categorized: {txn['description'][:40]} → {result['category_name']} (confidence: {result['confidence']:.0%})")
+        
+        print(f"\n=== AUTO-CATEGORIZATION COMPLETE ===")
+        print(f"Categorized: {categorized_count}/{len(non_duplicate_transactions)}")
+        print(f"Uncategorized: {len(non_duplicate_transactions) - categorized_count}")
+        print(f"=====================================\n")
+        
+        # Save non-duplicate transactions to database (with categories)
         count = Transaction.bulk_create(non_duplicate_transactions) if non_duplicate_transactions else 0
         
         # Archive the CSV file

@@ -58,6 +58,7 @@
                             <th>Date</th>
                             <th>Account</th>
                             <th>Description</th>
+                            <th>Category</th>
                             <th>Amount</th>
                             <th>Actions</th>
                         </tr>
@@ -296,6 +297,30 @@
         color: #999;
         margin-bottom: 10px;
     }
+    
+    .category-select {
+        padding: 6px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        background: white;
+        cursor: pointer;
+        min-width: 180px;
+    }
+    
+    .category-select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .category-select:hover {
+        border-color: #999;
+    }
+    
+    .btn-sm {
+        padding: 4px 10px;
+        font-size: 0.85rem;
+    }
 </style>
 
 <script>
@@ -313,9 +338,12 @@
         }).format(amount);
     }
     
+    let allCategories = [];
+    
     // Load transactions on page load
     document.addEventListener('DOMContentLoaded', function() {
         loadAccounts();
+        loadCategories();
         loadStats();
         loadTransactions();
     });
@@ -337,6 +365,20 @@
             }
         } catch (error) {
             console.error('Error loading accounts:', error);
+        }
+    }
+    
+    // Load categories
+    async function loadCategories() {
+        try {
+            const response = await fetch('/categories/api/all');
+            const data = await response.json();
+            
+            if (data.success) {
+                allCategories = data.categories;
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
         }
     }
     
@@ -425,6 +467,39 @@
         }
     }
     
+    // Build category dropdown HTML
+    function buildCategorySelect(transactionId, currentCategoryId) {
+        let html = `<select class="category-select" onchange="updateTransactionCategory(${transactionId}, this.value)">`;
+        html += `<option value="">Uncategorized</option>`;
+        
+        // Group by type
+        const incomeCategories = allCategories.filter(c => c.type === 'income');
+        const expenseCategories = allCategories.filter(c => c.type === 'expense');
+        
+        if (incomeCategories.length > 0) {
+            html += '<optgroup label="💰 Income">';
+            incomeCategories.forEach(cat => {
+                const indent = '&nbsp;'.repeat((cat.level - 1) * 2);
+                const selected = cat.id === currentCategoryId ? 'selected' : '';
+                html += `<option value="${cat.id}" ${selected}>${indent}${cat.name}</option>`;
+            });
+            html += '</optgroup>';
+        }
+        
+        if (expenseCategories.length > 0) {
+            html += '<optgroup label="💸 Expenses">';
+            expenseCategories.forEach(cat => {
+                const indent = '&nbsp;'.repeat((cat.level - 1) * 2);
+                const selected = cat.id === currentCategoryId ? 'selected' : '';
+                html += `<option value="${cat.id}" ${selected}>${indent}${cat.name}</option>`;
+            });
+            html += '</optgroup>';
+        }
+        
+        html += '</select>';
+        return html;
+    }
+    
     // Display transactions in table
     function displayTransactions(transactions) {
         const tbody = document.getElementById('transactions-tbody');
@@ -438,18 +513,52 @@
             
             const formattedAmount = formatCurrency(Math.abs(txn.amount)).replace('$', '');
             
+            // Category display
+            const categoryHtml = buildCategorySelect(txn.id, txn.category_id);
+            
             tr.innerHTML = `
                 <td>${txn.date}</td>
                 <td>${txn.account_name || 'Unknown'}</td>
                 <td>${txn.description}</td>
+                <td>${categoryHtml}</td>
                 <td class="${amountClass}">${amountSign}$${formattedAmount}</td>
                 <td>
-                    <button class="btn btn-danger" onclick="deleteTransaction(${txn.id})">Delete</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${txn.id})">Delete</button>
                 </td>
             `;
             
             tbody.appendChild(tr);
         });
+    }
+    
+    // Update transaction category
+    async function updateTransactionCategory(transactionId, categoryId) {
+        try {
+            const response = await fetch(`/categories/api/categorize/${transactionId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    category_id: categoryId ? parseInt(categoryId) : null,
+                    learn: false  // Don't auto-learn for now
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Reload stats to reflect changes
+                loadStats();
+            } else {
+                alert('Error updating category: ' + data.error);
+                loadTransactions();  // Reload to reset dropdown
+            }
+        } catch (error) {
+            console.error('Error updating category:', error);
+            alert('Error updating category');
+            loadTransactions();
+        }
     }
     
     // Delete transaction
