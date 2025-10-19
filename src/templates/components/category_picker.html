@@ -74,11 +74,11 @@
 
 .category-picker-content {
     position: absolute;
-    max-width: 850px;
-    width: 850px;
-    max-height: 520px;
+    max-width: 650px;
+    width: 650px;
+    max-height: 420px;
     background: white;
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: 0 8px 32px rgba(102, 126, 234, 0.25), 0 2px 8px rgba(0,0,0,0.1);
     z-index: 1001;
     overflow: hidden;
@@ -102,12 +102,12 @@
 }
 
 .breadcrumb {
-    padding: 15px 25px;
+    padding: 12px 20px;
     background: linear-gradient(to right, #f8f9fa, #e8f0fe);
     border-bottom: 1px solid #e0e0e0;
-    font-size: 0.95em;
+    font-size: 0.9em;
     color: #667eea;
-    min-height: 24px;
+    min-height: 20px;
     font-weight: 500;
 }
 
@@ -120,7 +120,7 @@
 .category-columns {
     display: flex;
     gap: 1px;
-    min-height: 300px;
+    min-height: 240px;
     background: #e0e0e0;
 }
 
@@ -133,9 +133,9 @@
 .column-title {
     background: #f8f9fa;
     color: #667eea;
-    padding: 12px;
+    padding: 10px;
     font-weight: 700;
-    font-size: 0.85em;
+    font-size: 0.75em;
     text-align: center;
     border-bottom: 2px solid #667eea;
     text-transform: uppercase;
@@ -143,19 +143,19 @@
 }
 
 .category-list {
-    max-height: 400px;
+    max-height: 280px;
     overflow-y: auto;
 }
 
 .category-option {
-    padding: 13px 16px;
+    padding: 10px 14px;
     cursor: pointer;
     border-bottom: 1px solid #f5f5f5;
     transition: all 0.15s;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.95em;
+    font-size: 0.9em;
 }
 
 .category-option:hover {
@@ -202,7 +202,7 @@
 }
 
 .learning-option {
-    padding: 16px 25px;
+    padding: 12px 20px;
     background: linear-gradient(135deg, #fff8e1 0%, #fffbea 100%);
     border-top: 1px solid #ffe082;
     border-bottom: 1px solid #ffe082;
@@ -211,33 +211,34 @@
 .learning-option label {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.85em;
     color: #5d4037;
     font-weight: 500;
 }
 
 .learning-option input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     cursor: pointer;
     accent-color: #667eea;
 }
 
 .picker-actions {
-    padding: 20px 25px;
+    padding: 15px 20px;
     background: #fafbfc;
     border-top: 1px solid #e0e0e0;
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
+    gap: 10px;
 }
 
 .picker-actions .btn {
-    padding: 10px 20px;
+    padding: 8px 16px;
     font-weight: 600;
-    min-width: 120px;
+    min-width: 100px;
+    font-size: 0.9em;
 }
 
 .btn-warning {
@@ -289,9 +290,9 @@ function openCategoryPicker(transactionId, buttonElement) {
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
             
-            // Position below the button
+            // Position below the button (adjusted for smaller size)
             content.style.top = (rect.bottom + scrollTop + 10) + 'px';
-            content.style.left = Math.max(20, (rect.left + scrollLeft - 200)) + 'px';
+            content.style.left = Math.max(20, (rect.left + scrollLeft - 150)) + 'px';
         } else {
             // Center on screen if no button reference
             content.style.top = '50%';
