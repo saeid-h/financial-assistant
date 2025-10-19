@@ -289,7 +289,7 @@ function openCategoryPicker(transactionId, buttonElement) {
         overlay.classList.add('active');
         document.getElementById('assign-category-btn').disabled = true;
         
-        // Position the picker below the button if provided
+        // Position the picker - ALWAYS keep it fully in viewport
         if (buttonElement) {
             const rect = buttonElement.getBoundingClientRect();
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -298,28 +298,46 @@ function openCategoryPicker(transactionId, buttonElement) {
             const pickerHeight = 500; // max-height of picker
             const pickerWidth = 650;
             const gap = 10;
+            const margin = 20; // margin from viewport edges
             
-            // Calculate position below button
-            let top = rect.bottom + scrollTop + gap;
-            let left = Math.max(20, rect.left + scrollLeft - 280);
-            
-            // Check if picker would go off bottom of viewport
             const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+            
+            let top, left;
+            
+            // STRATEGY: Try below first, then above, then force into viewport
+            
+            // Option 1: Below button
+            const topIfBelow = rect.bottom + scrollTop + gap;
             const spaceBelow = viewportHeight - rect.bottom;
             
-            if (spaceBelow < pickerHeight + 20) {
-                // Not enough space below, position above the button instead
-                top = rect.top + scrollTop - pickerHeight - gap;
-                
-                // If also not enough space above, center in viewport
-                if (rect.top < pickerHeight + 20) {
-                    top = scrollTop + (viewportHeight - pickerHeight) / 2;
-                }
+            // Option 2: Above button
+            const topIfAbove = rect.top + scrollTop - pickerHeight - gap;
+            const spaceAbove = rect.top;
+            
+            // Choose position
+            if (spaceBelow >= pickerHeight + margin) {
+                // Enough space below - use it
+                top = topIfBelow;
+            } else if (spaceAbove >= pickerHeight + margin) {
+                // Not enough below, but enough above - use above
+                top = topIfAbove;
+            } else {
+                // Not enough space either way - force into viewport at top with margin
+                top = scrollTop + margin;
             }
             
-            // Ensure doesn't go off right edge
-            if (left + pickerWidth > window.innerWidth - 20) {
-                left = window.innerWidth - pickerWidth - 20;
+            // Horizontal: try to align with button, shifted left
+            left = rect.left + scrollLeft - 280;
+            
+            // Ensure left edge is in viewport
+            if (left < margin) {
+                left = margin;
+            }
+            
+            // Ensure right edge is in viewport
+            if (left + pickerWidth > scrollLeft + viewportWidth - margin) {
+                left = scrollLeft + viewportWidth - pickerWidth - margin;
             }
             
             content.style.top = top + 'px';
