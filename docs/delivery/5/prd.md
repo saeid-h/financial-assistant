@@ -1,10 +1,11 @@
 # PBI-5: Visual Reports and Spending Analysis
 
-**Status**: Agreed  
+**Status**: Done  
 **Priority**: High (Phase 1 - MVP)  
 **Owner**: Saeed  
 **Created**: 2025-10-19  
 **Started**: 2025-10-19  
+**Completed**: 2025-10-20  
 
 [Back to Backlog](../backlog.md)
 
