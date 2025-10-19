@@ -260,8 +260,14 @@ class DuplicateDetector:
         Returns:
             datetime object
         """
+        from datetime import date
+        
         if isinstance(date_value, datetime):
             return date_value
+        
+        # Handle date objects (convert to datetime)
+        if isinstance(date_value, date):
+            return datetime.combine(date_value, datetime.min.time())
         
         if isinstance(date_value, str):
             # Try common date formats
@@ -272,5 +278,6 @@ class DuplicateDetector:
                     continue
         
         # If all else fails, return a very old date
+        print(f"WARNING: Could not parse date: {date_value} (type: {type(date_value)})")
         return datetime(1970, 1, 1)
 
