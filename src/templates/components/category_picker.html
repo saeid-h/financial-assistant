@@ -396,12 +396,27 @@ async function assignSelectedCategory() {
         return;
     }
     
-    // Check if learning is enabled
-    const learn = document.getElementById('learn-checkbox').checked;
+    // Disable button and show loading
+    const btn = document.getElementById('assign-category-btn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
     
-    // Update the transaction with learning option
-    await updateTransactionCategory(currentTransaction, selectedCategoryId, learn);
-    closeCategoryPicker();
+    try {
+        // Check if learning is enabled
+        const learn = document.getElementById('learn-checkbox').checked;
+        
+        // Update the transaction with learning option
+        await updateTransactionCategory(currentTransaction, selectedCategoryId, learn);
+        
+        // Close picker after successful update
+        closeCategoryPicker();
+    } catch (error) {
+        // Re-enable button on error
+        btn.disabled = false;
+        btn.textContent = originalText;
+        throw error;
+    }
 }
 
 async function selectUncategorized() {

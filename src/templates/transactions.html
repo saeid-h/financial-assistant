@@ -382,11 +382,15 @@
     // Load categories
     async function loadCategories() {
         try {
-            const response = await fetch('/categories/api/all');
+            // Force fresh data with cache buster
+            const response = await fetch(`/categories/api/all?_=${Date.now()}`, {
+                cache: 'no-store'
+            });
             const data = await response.json();
             
             if (data.success) {
                 allCategories = data.categories;
+                console.log(`Loaded ${allCategories.length} categories`);
             }
         } catch (error) {
             console.error('Error loading categories:', error);
@@ -452,9 +456,13 @@
         
         try {
             const params = buildQueryParams();
-            const url = `/transactions/api/all${params ? '?' + params : ''}`;
+            // Add timestamp to prevent caching
+            const cacheBuster = params ? `${params}&_=${Date.now()}` : `?_=${Date.now()}`;
+            const url = `/transactions/api/all${cacheBuster}`;
             
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                cache: 'no-store'  // Force fresh data
+            });
             const data = await response.json();
             
             loading.style.display = 'none';
@@ -558,9 +566,17 @@
             const data = await response.json();
             
             if (data.success) {
-                // Reload both stats and transactions to show updated category
-                loadStats();
-                loadTransactions();
+                console.log('✓ Category updated successfully');
+                
+                // Small delay to ensure database write completes
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Reload categories first to get updated data
+                await loadCategories();
+                
+                // Then reload stats and transactions to show updated category
+                await loadStats();
+                await loadTransactions();
                 
                 if (data.rule_created) {
                     console.log('✓ New categorization rule created automatically!');
