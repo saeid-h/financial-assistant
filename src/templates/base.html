@@ -85,6 +85,7 @@
                 <li><a href="/import" {% if request.path.startswith('/import') %}class="active"{% endif %}>Import</a></li>
                 <li><a href="/transactions" {% if request.path == '/transactions' %}class="active"{% endif %}>Transactions</a></li>
                 <li><a href="/categories" {% if request.path.startswith('/categories') %}class="active"{% endif %}>Categories</a></li>
+                <li><a href="/budgets" {% if request.path.startswith('/budgets') %}class="active"{% endif %}>Budgets</a></li>
                 <li><a href="/reports" {% if request.path.startswith('/reports') %}class="active"{% endif %}>Reports</a></li>
                 <li><a href="/admin" {% if request.path.startswith('/admin') %}class="active"{% endif %}>⚙️</a></li>
             </ul>
