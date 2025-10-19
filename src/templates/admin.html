@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Financial Assistant{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>⚙️ Database Administration</h1>
+    
+    <!-- Database Statistics -->
+    <div class="stats-section">
+        <h2>Database Statistics</h2>
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Transactions</div>
+                <div class="stat-value" id="stat-transactions">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Accounts</div>
+                <div class="stat-value" id="stat-accounts">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Categories</div>
+                <div class="stat-value" id="stat-categories">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Database Size</div>
+                <div class="stat-value" id="stat-size">-</div>
+            </div>
+        </div>
+        <button class="btn btn-secondary" onclick="loadStats()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+            </svg>
+            Refresh Stats
+        </button>
+    </div>
+    
+    <!-- Danger Zone -->
+    <div class="danger-zone">
+        <h2>⚠️ Danger Zone</h2>
+        <p>These actions are <strong>irreversible</strong>. All data will be permanently deleted.</p>
+        
+        <div class="reset-options">
+            <div class="reset-option">
+                <div class="reset-info">
+                    <h3>Reset Transactions Only</h3>
+                    <p>Delete all transactions but keep accounts and categories.</p>
+                </div>
+                <button class="btn btn-warning" onclick="showResetModal('transactions')">
+                    Reset Transactions
+                </button>
+            </div>
+            
+            <div class="reset-option">
+                <div class="reset-info">
+                    <h3>Reset Everything</h3>
+                    <p>Delete all transactions AND all accounts. Categories will be preserved.</p>
+                </div>
+                <button class="btn btn-danger" onclick="showResetModal('all')">
+                    Reset Everything
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirm-modal" class="modal">
+    <div class="modal-content">
+        <h2>⚠️ Confirm Database Reset</h2>
+        
+        <div class="warning-box">
+            <p><strong>WARNING: This action cannot be undone!</strong></p>
+            <p id="reset-message"></p>
+        </div>
+        
+        <div class="form-group">
+            <label for="confirmation-text">
+                Type <code>DELETE ALL DATA</code> to confirm:
+            </label>
+            <input 
+                type="text" 
+                id="confirmation-text" 
+                placeholder="DELETE ALL DATA"
+                autocomplete="off"
+            >
+            <div id="confirmation-error" class="error-text" style="display: none;"></div>
+        </div>
+        
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeResetModal()">Cancel</button>
+            <button class="btn btn-danger" id="confirm-reset-btn" onclick="confirmReset()" disabled>
+                Confirm Reset
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.admin-container h1 {
+    color: #2c3e50;
+    margin-bottom: 30px;
+}
+
+.stats-section {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.stats-section h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-label {
+    color: #7f8c8d;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.danger-zone {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid #e74c3c;
+}
+
+.danger-zone h2 {
+    margin-top: 0;
+    color: #e74c3c;
+    margin-bottom: 15px;
+}
+
+.danger-zone > p {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.reset-options {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.reset-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    gap: 20px;
+}
+
+.reset-info h3 {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+}
+
+.reset-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95em;
+}
+
+.btn-warning {
+    background: #f39c12;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #e67e22;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #e74c3c;
+}
+
+.warning-box {
+    background: #ffebee;
+    border-left: 4px solid #e74c3c;
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+.warning-box p {
+    margin: 8px 0;
+    color: #c62828;
+}
+
+.warning-box strong {
+    font-weight: 700;
+}
+
+.form-group {
+    margin: 20px 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.form-group code {
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+    color: #e74c3c;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: monospace;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.error-text {
+    color: #e74c3c;
+    font-size: 0.9em;
+    margin-top: 8px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .reset-option {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .reset-option button {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+let currentResetType = null;
+
+// Load statistics on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadStats();
+});
+
+async function loadStats() {
+    try {
+        const response = await fetch('/admin/api/stats');
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('stat-transactions').textContent = data.stats.transactions.toLocaleString();
+            document.getElementById('stat-accounts').textContent = data.stats.accounts.toLocaleString();
+            document.getElementById('stat-categories').textContent = data.stats.categories.toLocaleString();
+            document.getElementById('stat-size').textContent = data.stats.database_size_mb + ' MB';
+        } else {
+            alert('Failed to load stats: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+        alert('Error loading statistics');
+    }
+}
+
+function showResetModal(resetType) {
+    currentResetType = resetType;
+    
+    const message = document.getElementById('reset-message');
+    if (resetType === 'all') {
+        message.textContent = 'You are about to delete ALL transactions AND ALL accounts. This will completely reset your financial data.';
+    } else {
+        message.textContent = 'You are about to delete ALL transactions. Your accounts will be preserved.';
+    }
+    
+    document.getElementById('confirmation-text').value = '';
+    document.getElementById('confirmation-error').style.display = 'none';
+    document.getElementById('confirm-reset-btn').disabled = true;
+    document.getElementById('confirm-modal').classList.add('active');
+}
+
+function closeResetModal() {
+    document.getElementById('confirm-modal').classList.remove('active');
+    currentResetType = null;
+}
+
+// Enable confirm button only when correct text is entered
+document.getElementById('confirmation-text').addEventListener('input', function(e) {
+    const value = e.target.value.trim();
+    const btn = document.getElementById('confirm-reset-btn');
+    const error = document.getElementById('confirmation-error');
+    
+    if (value === 'DELETE ALL DATA') {
+        btn.disabled = false;
+        error.style.display = 'none';
+    } else {
+        btn.disabled = true;
+        if (value.length > 0) {
+            error.textContent = 'Text does not match. Type exactly: DELETE ALL DATA';
+            error.style.display = 'block';
+        } else {
+            error.style.display = 'none';
+        }
+    }
+});
+
+async function confirmReset() {
+    const confirmation = document.getElementById('confirmation-text').value.trim();
+    
+    if (confirmation !== 'DELETE ALL DATA') {
+        alert('Please type the exact confirmation text');
+        return;
+    }
+    
+    // Final confirmation
+    const finalConfirm = confirm('Are you absolutely sure? This action CANNOT be undone!');
+    if (!finalConfirm) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/api/reset-database', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                confirmation: confirmation,
+                reset_type: currentResetType
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message);
+            closeResetModal();
+            loadStats();
+        } else {
+            alert('Reset failed: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error resetting database:', error);
+        alert('Error resetting database');
+    }
+}
+
+// Close modal on outside click
+document.getElementById('confirm-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeResetModal();
+    }
+});
+</script>
+{% endblock %}
+
