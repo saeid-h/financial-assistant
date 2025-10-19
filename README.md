@@ -4,7 +4,14 @@ A local web-based financial analysis application for tracking, categorizing, and
 
 ## Features
 
-- **CSV Import**: Upload bank statements and automatically parse transactions
+- **Account Management**: Create, edit, and manage multiple accounts with a single click
+  - Click any account card to edit its details
+  - Update account name, type, or institution
+  - Delete accounts with confirmation
+- **CSV Import**: Upload bank statements from any financial institution
+  - Automatic format detection
+  - Support for 100+ different CSV formats
+  - Preview before importing
 - **Multi-Account Support**: Track multiple bank and credit card accounts
 - **Smart Categorization**: Automatic transaction categorization with machine learning from your corrections
 - **Budgeting**: Set and track budgets per category
@@ -92,6 +99,30 @@ A local web-based financial analysis application for tracking, categorizing, and
    **Note**: Using port 5001 because port 5000 is used by macOS AirPlay on Mac systems.
    
    **Important**: The Flask application must be running for the browser to access it!
+
+## Quick Start Guide
+
+### Managing Accounts
+
+1. **View Accounts**: Click "Accounts" in the navigation bar
+2. **Add Account**: Click "+ Add Account" button
+   - Enter account name (e.g., "Chase Checking")
+   - Select type (checking, savings, or credit card)
+   - Optionally add financial institution
+3. **Edit Account**: Simply **click on any account card**
+   - Update name, type, or institution
+   - Click "Update Account" to save changes
+4. **Delete Account**: Click on account card, then click "Delete Account"
+   - Confirmation dialog will appear for safety
+
+### Importing Transactions
+
+1. **Navigate**: Click "Import" in the navigation bar or home page
+2. **Select Account**: Choose which account these transactions belong to
+3. **Upload CSV**: Click "Choose File" and select your bank's CSV export
+   - Any format is supported! System auto-detects columns
+4. **Preview**: Review transactions and validation errors
+5. **Confirm**: Click "Confirm Import" to save to database
 
 ## Supported CSV Formats
 
