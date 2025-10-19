@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }} - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ app_name }}</h1>
+            <p class="tagline">Track, Analyze, and Optimize Your Finances</p>
+        </header>
+
+        <main>
+            <div class="welcome-section">
+                <h2>Welcome to Financial Assistant</h2>
+                <p>Your personal financial tracking and analysis tool.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Import Statements</h3>
+                    <p>Upload your bank and credit card statements in CSV format</p>
+                    <span class="status">Coming Soon</span>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Auto-Categorization</h3>
+                    <p>Smart categorization that learns from your corrections</p>
+                    <span class="status">Coming Soon</span>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Reports & Charts</h3>
+                    <p>Visualize your spending patterns and trends</p>
+                    <span class="status">Coming Soon</span>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Budget Tracking</h3>
+                    <p>Set budgets and track your progress</p>
+                    <span class="status">Coming Soon</span>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3>Getting Started</h3>
+                <ol>
+                    <li>Import your bank statements</li>
+                    <li>Review and confirm transaction categories</li>
+                    <li>Explore reports and insights</li>
+                    <li>Set budgets and track goals</li>
+                </ol>
+            </div>
+
+            <div class="status-section">
+                <h3>System Status</h3>
+                <p class="status-ok">✓ Application is running</p>
+                <p class="status-ok">✓ Database is connected</p>
+                <p class="version">Version 1.0.0 - MVP Phase</p>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; {{ current_year }} Financial Assistant. All data stored locally.</p>
+        </footer>
+    </div>
+</body>
+</html>
+

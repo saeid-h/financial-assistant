@@ -1,0 +1,221 @@
+# Financial Assistant - Project Specification
+
+**Version**: 1.0  
+**Date**: 2025-10-19  
+**Status**: Active
+
+## Project Overview
+
+A local web-based financial analysis application that imports bank and credit card statements, automatically categorizes transactions with user learning, supports multiple accounts, and generates comprehensive financial reports with visualizations to track financial health and progress.
+
+## Technology Stack
+
+- **Backend Framework**: Python 3.11+ with Flask
+- **Database**: SQLite3 (file-based, no server required)
+- **Data Processing**: pandas for CSV parsing and data analysis
+- **Frontend**: HTML5, CSS3, JavaScript (vanilla)
+- **Charting Library**: Chart.js for interactive visualizations
+- **Testing**: pytest with pytest-cov for coverage reporting
+- **Development Environment**: Python venv (virtual environment)
+- **Version Control**: Git with structured commit conventions
+
+## Application Type
+
+- **Deployment**: Local web application (runs on localhost)
+- **Access**: Browser-based UI (single-user)
+- **Platform**: Cross-platform (Windows, macOS, Linux)
+- **Network**: No external dependencies required
+
+## Core Features
+
+### 1. Data Import
+- CSV file upload via web interface
+- Automatic format detection and validation
+- Duplicate transaction detection
+- Update existing data with new imports
+- Archive statements in YYYY/MM directory structure
+
+### 2. Multi-Account Support
+- Track multiple bank and credit card accounts
+- Account creation, editing, and deletion
+- Account-specific transaction views
+- Cross-account reporting
+
+### 3. Intelligent Categorization
+- 2-3 level hierarchical categories (e.g., Fixed Expenses > Housing > Rent)
+- Predefined category structure
+- Pattern-based auto-categorization
+- User confirmation workflow for new/uncertain transactions
+- Machine learning from user corrections
+- Manual re-categorization capability
+
+### 4. Reporting and Visualization
+- Monthly expenses by category (interactive charts)
+- Income vs expenses timeline
+- Category trend analysis
+- Year-over-year comparisons
+- Custom date range filtering
+- Data export to CSV
+
+### 5. Transaction Management
+- Advanced search and filtering
+- Transaction notes and custom tags
+- Bulk operations
+- Transaction history
+
+### 6. Budgeting System
+- Monthly/yearly budget creation per category
+- Budget templates and copying
+- Visual progress indicators
+- Budget vs actual comparison
+- Overspending alerts
+
+### 7. Savings Goals
+- Define and track multiple savings goals
+- Progress visualization
+- Achievement predictions
+- Goal allocation
+
+### 8. Recurring Transaction Detection
+- Automatic identification of subscriptions and bills
+- Recurring payment management
+- Missing payment alerts
+- Amount change detection
+
+### 9. Financial Health Dashboard
+- Net income and savings rate
+- Budget status overview
+- Top spending categories
+- Month-over-month comparisons
+- Financial health score
+
+### 10. Cash Flow and Alerts
+- Visual cash flow calendar
+- Future cash flow predictions
+- Configurable alerts (budget, unusual transactions, goals)
+- In-app notifications
+
+## Data Model
+
+### Core Entities
+
+1. **Accounts**: Bank/credit card accounts
+2. **Transactions**: Individual financial transactions
+3. **Categories**: Hierarchical category structure (2-3 levels)
+4. **Rules**: Categorization rules learned from user input
+5. **Budgets**: Budget definitions per category
+6. **Goals**: Savings goal definitions
+7. **Tags**: Custom transaction tags
+8. **Notes**: Transaction notes
+
+## Project Structure
+
+```
+financial-assistant/
+├── .cursor/
+│   └── rules/          # Cursor rules (sw-pbi.mdc, spec.mdc)
+├── docs/
+│   ├── delivery/       # PBI and task documentation
+│   │   ├── backlog.md
+│   │   └── [1-11]/     # PBI directories
+│   └── technical/      # Technical documentation
+├── src/
+│   ├── app.py         # Flask application entry point
+│   ├── models/        # Database models
+│   ├── services/      # Business logic
+│   ├── routes/        # API endpoints
+│   ├── static/        # CSS, JS, images
+│   ├── templates/     # HTML templates
+│   └── utils/         # Utility functions
+├── data/
+│   ├── YYYY/MM/       # Statement archives by date
+│   └── database.db    # SQLite database
+├── tests/
+│   ├── unit/          # Unit tests
+│   ├── integration/   # Integration tests
+│   └── conftest.py    # Test fixtures
+├── config/            # Configuration files
+├── logs/              # Application logs
+├── .gitignore
+├── requirements.txt
+├── README.md
+└── .git/
+```
+
+## Development Phases
+
+### Phase 1: MVP - Core Functionality
+- PBI 1: Project Setup and Infrastructure
+- PBI 2: CSV Import and Transaction Management
+- PBI 3: Multi-Account Management
+- PBI 4: Smart Categorization System
+- PBI 5: Reports and Visualizations
+
+### Phase 2: Enhanced Features
+- PBI 6: Transaction Search, Filter, and Notes
+- PBI 7: Budgeting System
+
+### Phase 3: Advanced Financial Tracking
+- PBI 8: Savings Goals and Tracking
+- PBI 9: Recurring Transaction Detection
+- PBI 10: Financial Health Dashboard
+- PBI 11: Cash Flow Calendar and Alerts
+
+### Phase 4: Optional Advanced Features (Time Permitting)
+- Security hardening
+- Data backup/restore
+- Database migrations
+- Advanced logging
+- Configuration management
+- Performance optimization
+
+## Quality Standards
+
+- **Test Coverage**: Minimum 80% code coverage
+- **Testing Strategy**: Unit tests + Integration tests
+- **Code Style**: Google Python Style Guide
+- **Documentation**: Comprehensive inline and technical docs
+- **Version Control**: Structured commits following git rules
+- **Debugging**: Systematic logging and error handling
+
+## Success Criteria
+
+1. Successfully import CSV bank statements
+2. Automatically categorize 80%+ of transactions correctly after initial learning
+3. Support at least 5 concurrent bank accounts
+4. Generate accurate monthly financial reports
+5. Provide actionable financial insights through dashboard
+6. Achieve 80%+ test coverage
+7. Zero critical bugs in core functionality
+
+## User Workflow
+
+1. **Initial Setup**: Create accounts, import historical statements
+2. **Transaction Review**: Review and confirm auto-categorizations
+3. **Ongoing Use**: Regular statement imports, budget tracking
+4. **Analysis**: View reports, monitor financial health, track goals
+5. **Refinement**: Adjust budgets, add notes, update goals
+
+## Constraints and Assumptions
+
+- Single-user application (no authentication required)
+- Local deployment only (no cloud hosting)
+- CSV format for statements (primary), OFX/QFX future consideration
+- Data privacy maintained through local storage
+- No external API dependencies for core functionality
+- Modern web browser required (Chrome, Firefox, Safari, Edge)
+
+## Future Considerations
+
+- Mobile app or responsive web design
+- Multi-currency support
+- Tax reporting features
+- Investment tracking
+- Bill payment reminders
+- Receipt attachment storage
+- Multi-user support with authentication
+
+---
+
+**Note**: This specification serves as the authoritative source for project scope, features, and technical decisions. All PBIs and tasks must align with this specification.
+
