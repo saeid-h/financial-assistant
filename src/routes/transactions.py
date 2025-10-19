@@ -24,18 +24,40 @@ def transactions_page():
 
 @transactions_bp.route('/api/all')
 def get_all_transactions():
-    """Get all transactions with optional filtering by account and date range."""
+    """Get all transactions with optional filtering."""
     try:
         account_id = request.args.get('account_id', type=int)
         date_from = request.args.get('date_from', type=str)
         date_to = request.args.get('date_to', type=str)
+        search = request.args.get('search', type=str)
+        amount_min = request.args.get('amount_min', type=float)
+        amount_max = request.args.get('amount_max', type=float)
+        transaction_type = request.args.get('type', type=str)
         limit = request.args.get('limit', type=int)
+        
+        # Parse category IDs (comma-separated)
+        category_ids = None
+        category_ids_str = request.args.get('category_ids', type=str)
+        if category_ids_str:
+            category_ids = [int(id) for id in category_ids_str.split(',') if id.strip()]
+        
+        # Parse tag IDs (comma-separated)
+        tag_ids = None
+        tag_ids_str = request.args.get('tag_ids', type=str)
+        if tag_ids_str:
+            tag_ids = [int(id) for id in tag_ids_str.split(',') if id.strip()]
         
         # Get filtered transactions
         transactions = Transaction.get_filtered(
             account_id=account_id,
             date_from=date_from,
             date_to=date_to,
+            search=search,
+            amount_min=amount_min,
+            amount_max=amount_max,
+            category_ids=category_ids,
+            transaction_type=transaction_type,
+            tag_ids=tag_ids,
             limit=limit
         )
         
@@ -92,12 +114,34 @@ def get_transaction_stats():
         account_id = request.args.get('account_id', type=int)
         date_from = request.args.get('date_from', type=str)
         date_to = request.args.get('date_to', type=str)
+        search = request.args.get('search', type=str)
+        amount_min = request.args.get('amount_min', type=float)
+        amount_max = request.args.get('amount_max', type=float)
+        transaction_type = request.args.get('type', type=str)
+        
+        # Parse category IDs (comma-separated)
+        category_ids = None
+        category_ids_str = request.args.get('category_ids', type=str)
+        if category_ids_str:
+            category_ids = [int(id) for id in category_ids_str.split(',') if id.strip()]
+        
+        # Parse tag IDs (comma-separated)
+        tag_ids = None
+        tag_ids_str = request.args.get('tag_ids', type=str)
+        if tag_ids_str:
+            tag_ids = [int(id) for id in tag_ids_str.split(',') if id.strip()]
         
         # Get filtered transactions for stats
         transactions = Transaction.get_filtered(
             account_id=account_id,
             date_from=date_from,
-            date_to=date_to
+            date_to=date_to,
+            search=search,
+            amount_min=amount_min,
+            amount_max=amount_max,
+            category_ids=category_ids,
+            transaction_type=transaction_type,
+            tag_ids=tag_ids
         )
         
         # Calculate stats

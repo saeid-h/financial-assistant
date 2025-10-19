@@ -222,14 +222,26 @@ class Transaction:
     def get_filtered(account_id: Optional[int] = None, 
                     date_from: Optional[str] = None, 
                     date_to: Optional[str] = None,
+                    search: Optional[str] = None,
+                    amount_min: Optional[float] = None,
+                    amount_max: Optional[float] = None,
+                    category_ids: Optional[List[int]] = None,
+                    transaction_type: Optional[str] = None,
+                    tag_ids: Optional[List[int]] = None,
                     limit: Optional[int] = None) -> List[Dict]:
         """
-        Get transactions with optional filtering by account and date range.
+        Get transactions with optional filtering.
         
         Args:
             account_id: Optional account ID to filter by
             date_from: Optional start date (YYYY-MM-DD)
             date_to: Optional end date (YYYY-MM-DD)
+            search: Optional search string for description
+            amount_min: Optional minimum amount (absolute value)
+            amount_max: Optional maximum amount (absolute value)
+            category_ids: Optional list of category IDs
+            transaction_type: Optional type filter ('income', 'expense', 'all')
+            tag_ids: Optional list of tag IDs
             limit: Optional limit on number of transactions
         
         Returns:
@@ -241,10 +253,11 @@ class Transaction:
         
         # Build query with filters
         query = """
-            SELECT t.*, c.name as category_name, a.name as account_name
+            SELECT DISTINCT t.*, c.name as category_name, a.name as account_name
             FROM transactions t
             LEFT JOIN categories c ON t.category_id = c.id
             LEFT JOIN accounts a ON t.account_id = a.id
+            LEFT JOIN transaction_tags tt ON t.id = tt.transaction_id
             WHERE 1=1
         """
         params = []
@@ -260,6 +273,34 @@ class Transaction:
         if date_to:
             query += " AND t.date <= ?"
             params.append(date_to)
+        
+        if search:
+            query += " AND t.description LIKE ?"
+            params.append(f"%{search}%")
+        
+        if amount_min is not None:
+            query += " AND ABS(t.amount) >= ?"
+            params.append(amount_min)
+        
+        if amount_max is not None:
+            query += " AND ABS(t.amount) <= ?"
+            params.append(amount_max)
+        
+        if category_ids:
+            placeholders = ','.join('?' * len(category_ids))
+            query += f" AND t.category_id IN ({placeholders})"
+            params.extend(category_ids)
+        
+        if transaction_type == 'income':
+            query += " AND t.amount > 0"
+        elif transaction_type == 'expense':
+            query += " AND t.amount < 0"
+        # 'all' means no filter
+        
+        if tag_ids:
+            placeholders = ','.join('?' * len(tag_ids))
+            query += f" AND tt.tag_id IN ({placeholders})"
+            params.extend(tag_ids)
         
         query += " ORDER BY t.date DESC, t.id DESC"
         

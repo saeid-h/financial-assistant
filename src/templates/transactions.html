@@ -8,15 +8,45 @@
 <div class="container">
     <div class="page-header">
         <h1>Transactions</h1>
+        
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="search-input" class="form-input search-input" placeholder="🔍 Search transactions..." autocomplete="off">
+            <button id="clear-search-btn" class="btn btn-secondary" style="display: none;">✗</button>
+        </div>
+        
+        <!-- Filters -->
         <div class="header-actions">
             <select id="account-filter" class="form-select">
                 <option value="">All Accounts</option>
             </select>
             <input type="date" id="date-from" class="form-input" placeholder="From Date">
             <input type="date" id="date-to" class="form-input" placeholder="To Date">
-            <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
-            <button id="clear-filters-btn" class="btn btn-secondary">Clear</button>
-            <button id="refresh-btn" class="btn btn-secondary">⟳</button>
+            <button id="toggle-advanced-btn" class="btn btn-secondary">⚙️ More Filters</button>
+            <button id="apply-filters-btn" class="btn btn-primary">Apply</button>
+            <button id="clear-filters-btn" class="btn btn-secondary">Clear All</button>
+        </div>
+        
+        <!-- Advanced Filters (collapsible) -->
+        <div id="advanced-filters" class="advanced-filters" style="display: none;">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="amount-min">Amount Min:</label>
+                    <input type="number" id="amount-min" class="form-input" placeholder="0.00" step="0.01" min="0">
+                </div>
+                <div class="filter-group">
+                    <label for="amount-max">Amount Max:</label>
+                    <input type="number" id="amount-max" class="form-input" placeholder="10000.00" step="0.01" min="0">
+                </div>
+                <div class="filter-group">
+                    <label for="type-filter">Type:</label>
+                    <select id="type-filter" class="form-select">
+                        <option value="all">All Types</option>
+                        <option value="income">Income Only</option>
+                        <option value="expense">Expenses Only</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
     <!-- Statistics Cards -->
@@ -400,9 +430,25 @@
     // Build query params
     function buildQueryParams() {
         const params = new URLSearchParams();
+        
+        // Basic filters
         if (currentAccountFilter) params.append('account_id', currentAccountFilter);
         if (currentDateFrom) params.append('date_from', currentDateFrom);
         if (currentDateTo) params.append('date_to', currentDateTo);
+        
+        // Search
+        const search = document.getElementById('search-input').value.trim();
+        if (search) params.append('search', search);
+        
+        // Advanced filters
+        const amountMin = document.getElementById('amount-min').value;
+        const amountMax = document.getElementById('amount-max').value;
+        const typeFilter = document.getElementById('type-filter').value;
+        
+        if (amountMin) params.append('amount_min', amountMin);
+        if (amountMax) params.append('amount_max', amountMax);
+        if (typeFilter && typeFilter !== 'all') params.append('type', typeFilter);
+        
         return params.toString();
     }
     
@@ -634,6 +680,36 @@
         }
     }
     
+    // Search with debouncing (500ms delay)
+    let searchTimeout;
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        const clearBtn = document.getElementById('clear-search-btn');
+        clearBtn.style.display = e.target.value ? 'inline-block' : 'none';
+        
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadStats();
+            loadTransactions();
+        }, 500);
+    });
+    
+    // Clear search button
+    document.getElementById('clear-search-btn').addEventListener('click', () => {
+        document.getElementById('search-input').value = '';
+        document.getElementById('clear-search-btn').style.display = 'none';
+        loadStats();
+        loadTransactions();
+    });
+    
+    // Toggle advanced filters
+    document.getElementById('toggle-advanced-btn').addEventListener('click', () => {
+        const advFilters = document.getElementById('advanced-filters');
+        const isVisible = advFilters.style.display !== 'none';
+        advFilters.style.display = isVisible ? 'none' : 'block';
+        document.getElementById('toggle-advanced-btn').textContent = 
+            isVisible ? '⚙️ More Filters' : '⚙️ Hide Filters';
+    });
+    
     // Apply filters button
     document.getElementById('apply-filters-btn').addEventListener('click', () => {
         currentAccountFilter = document.getElementById('account-filter').value;
@@ -645,18 +721,19 @@
     
     // Clear filters button
     document.getElementById('clear-filters-btn').addEventListener('click', () => {
+        // Clear all filter inputs
         document.getElementById('account-filter').value = '';
         document.getElementById('date-from').value = '';
         document.getElementById('date-to').value = '';
+        document.getElementById('search-input').value = '';
+        document.getElementById('amount-min').value = '';
+        document.getElementById('amount-max').value = '';
+        document.getElementById('type-filter').value = 'all';
+        document.getElementById('clear-search-btn').style.display = 'none';
+        
         currentAccountFilter = '';
         currentDateFrom = '';
         currentDateTo = '';
-        loadStats();
-        loadTransactions();
-    });
-    
-    // Refresh button
-    document.getElementById('refresh-btn').addEventListener('click', () => {
         loadStats();
         loadTransactions();
     });
