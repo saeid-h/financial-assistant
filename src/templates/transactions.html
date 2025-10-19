@@ -3,6 +3,8 @@
 {% block title %}Transactions - Financial Assistant{% endblock %}
 
 {% block content %}
+{% include 'components/category_picker.html' %}
+
 <div class="container">
     <div class="page-header">
         <h1>Transactions</h1>
@@ -298,23 +300,32 @@
         margin-bottom: 10px;
     }
     
-    .category-select {
-        padding: 6px 10px;
+    .category-btn {
+        padding: 6px 12px;
         border: 1px solid #ddd;
         border-radius: 4px;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         background: white;
         cursor: pointer;
-        min-width: 180px;
+        transition: all 0.2s;
+        white-space: nowrap;
     }
     
-    .category-select:focus {
-        outline: none;
+    .category-btn.uncategorized {
+        color: #999;
+        border-style: dashed;
+    }
+    
+    .category-btn.categorized {
+        background: #e8f0fe;
         border-color: #667eea;
+        color: #667eea;
+        font-weight: 500;
     }
     
-    .category-select:hover {
-        border-color: #999;
+    .category-btn:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
     }
     
     .btn-sm {
@@ -467,37 +478,36 @@
         }
     }
     
-    // Build category dropdown HTML
-    function buildCategorySelect(transactionId, currentCategoryId) {
-        let html = `<select class="category-select" onchange="updateTransactionCategory(${transactionId}, this.value)">`;
-        html += `<option value="">Uncategorized</option>`;
+    // Get category display name
+    function getCategoryDisplayName(categoryId) {
+        if (!categoryId) return 'Uncategorized';
         
-        // Group by type
-        const incomeCategories = allCategories.filter(c => c.type === 'income');
-        const expenseCategories = allCategories.filter(c => c.type === 'expense');
+        const cat = allCategories.find(c => c.id === categoryId);
+        if (!cat) return 'Unknown';
         
-        if (incomeCategories.length > 0) {
-            html += '<optgroup label="💰 Income">';
-            incomeCategories.forEach(cat => {
-                const indent = '&nbsp;'.repeat((cat.level - 1) * 2);
-                const selected = cat.id === currentCategoryId ? 'selected' : '';
-                html += `<option value="${cat.id}" ${selected}>${indent}${cat.name}</option>`;
-            });
-            html += '</optgroup>';
+        // Build full path
+        const path = [];
+        let current = cat;
+        
+        while (current) {
+            path.unshift(current.name);
+            if (current.parent_id) {
+                current = allCategories.find(c => c.id === current.parent_id);
+            } else {
+                current = null;
+            }
         }
         
-        if (expenseCategories.length > 0) {
-            html += '<optgroup label="💸 Expenses">';
-            expenseCategories.forEach(cat => {
-                const indent = '&nbsp;'.repeat((cat.level - 1) * 2);
-                const selected = cat.id === currentCategoryId ? 'selected' : '';
-                html += `<option value="${cat.id}" ${selected}>${indent}${cat.name}</option>`;
-            });
-            html += '</optgroup>';
-        }
+        // Return last 2 levels for brevity
+        return path.length > 2 ? path.slice(-2).join(' → ') : path.join(' → ');
+    }
+    
+    // Build category button HTML
+    function buildCategoryButton(transactionId, currentCategoryId) {
+        const displayName = getCategoryDisplayName(currentCategoryId);
+        const buttonClass = currentCategoryId ? 'category-btn categorized' : 'category-btn uncategorized';
         
-        html += '</select>';
-        return html;
+        return `<button class="${buttonClass}" onclick="openCategoryPicker(${transactionId})">${displayName}</button>`;
     }
     
     // Display transactions in table
@@ -514,7 +524,7 @@
             const formattedAmount = formatCurrency(Math.abs(txn.amount)).replace('$', '');
             
             // Category display
-            const categoryHtml = buildCategorySelect(txn.id, txn.category_id);
+            const categoryHtml = buildCategoryButton(txn.id, txn.category_id);
             
             tr.innerHTML = `
                 <td>${txn.date}</td>

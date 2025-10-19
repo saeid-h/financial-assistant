@@ -100,6 +100,51 @@ def get_category(category_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@categories_bp.route('/api/create', methods=['POST'])
+def create_category():
+    """
+    Create a new category.
+    
+    Request JSON:
+        {
+            "name": str,
+            "level": int (1-3),
+            "type": "income" | "expense" | "transfer",
+            "parent_id": int (optional)
+        }
+    
+    Returns:
+        JSON with new category ID
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        name = data.get('name')
+        level = data.get('level')
+        category_type = data.get('type')
+        parent_id = data.get('parent_id')
+        
+        if not all([name, level, category_type]):
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        
+        category_model = Category(current_app.config['DATABASE'])
+        category_id = category_model.create(name, level, category_type, parent_id)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Category "{name}" created successfully',
+            'category_id': category_id
+        })
+    
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @categories_bp.route('/api/categorize/<int:transaction_id>', methods=['PUT'])
 def categorize_transaction(transaction_id):
     """

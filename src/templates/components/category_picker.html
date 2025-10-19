@@ -1,0 +1,403 @@
+<!-- Category Picker Modal Component -->
+<div id="category-picker-modal" class="modal">
+    <div class="modal-content category-picker-content">
+        <div class="modal-header">
+            <h2>Select Category</h2>
+            <button class="close-btn" onclick="closeCategoryPicker()">&times;</button>
+        </div>
+        
+        <div class="category-picker-body">
+            <!-- Breadcrumb -->
+            <div id="category-breadcrumb" class="breadcrumb"></div>
+            
+            <!-- Main category selection area -->
+            <div class="category-columns">
+                <div class="category-column" id="level-1-column">
+                    <div class="column-title">Category Type</div>
+                    <div class="category-list" id="level-1-list"></div>
+                </div>
+                
+                <div class="category-column" id="level-2-column" style="display: none;">
+                    <div class="column-title" id="level-2-title">Subcategory</div>
+                    <div class="category-list" id="level-2-list"></div>
+                </div>
+                
+                <div class="category-column" id="level-3-column" style="display: none;">
+                    <div class="column-title" id="level-3-title">Detail</div>
+                    <div class="category-list" id="level-3-list"></div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="picker-actions">
+                <button class="btn btn-secondary" onclick="closeCategoryPicker()">Cancel</button>
+                <button class="btn btn-success" id="select-uncategorized-btn" onclick="selectUncategorized()">
+                    Set as Uncategorized
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.category-picker-content {
+    max-width: 900px;
+    width: 95%;
+    max-height: 80vh;
+}
+
+.category-picker-body {
+    padding: 20px 0;
+}
+
+.breadcrumb {
+    padding: 10px 20px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    color: #666;
+    min-height: 20px;
+}
+
+.breadcrumb .separator {
+    margin: 0 8px;
+    color: #999;
+}
+
+.category-columns {
+    display: flex;
+    gap: 10px;
+    min-height: 300px;
+    padding: 0 20px;
+}
+
+.category-column {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.column-title {
+    background: #667eea;
+    color: white;
+    padding: 10px;
+    font-weight: 600;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.category-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.category-option {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-option:hover {
+    background: #f8f9fa;
+}
+
+.category-option.selected {
+    background: #e8f0fe;
+    border-left: 4px solid #667eea;
+}
+
+.category-option.has-children::after {
+    content: '›';
+    color: #999;
+    font-size: 1.2em;
+}
+
+.category-option.new-category {
+    color: #667eea;
+    font-weight: 600;
+    border-top: 2px solid #e0e0e0;
+}
+
+.category-option.new-category:hover {
+    background: #e8f0fe;
+}
+
+.category-badge {
+    background: #27ae60;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75em;
+    font-weight: 600;
+}
+
+.picker-actions {
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .category-columns {
+        flex-direction: column;
+    }
+    
+    .category-column {
+        min-height: 200px;
+    }
+}
+</style>
+
+<script>
+let currentTransaction = null;
+let selectedCategoryPath = [];
+let allCategoriesForPicker = [];
+
+function openCategoryPicker(transactionId) {
+    currentTransaction = transactionId;
+    selectedCategoryPath = [];
+    
+    // Load categories and show modal
+    loadCategoriesForPicker().then(() => {
+        showLevel1Categories();
+        document.getElementById('category-picker-modal').classList.add('active');
+    });
+}
+
+function closeCategoryPicker() {
+    document.getElementById('category-picker-modal').classList.remove('active');
+    currentTransaction = null;
+    selectedCategoryPath = [];
+}
+
+async function loadCategoriesForPicker() {
+    try {
+        const response = await fetch('/categories/api/all');
+        const data = await response.json();
+        
+        if (data.success) {
+            allCategoriesForPicker = data.categories;
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+function showLevel1Categories() {
+    const level1Categories = allCategoriesForPicker.filter(c => c.level === 1);
+    const list = document.getElementById('level-1-list');
+    list.innerHTML = '';
+    
+    // Group by type
+    const types = [
+        { key: 'income', label: '💰 Income', icon: '💰' },
+        { key: 'expense', label: '💸 Expenses', icon: '💸' },
+        { key: 'transfer', label: '💹 Savings & Investments', icon: '💹' }
+    ];
+    
+    types.forEach(typeInfo => {
+        const typeCats = level1Categories.filter(c => c.type === typeInfo.key);
+        
+        typeCats.forEach(cat => {
+            const div = document.createElement('div');
+            div.className = 'category-option has-children';
+            div.innerHTML = `
+                <span>${typeInfo.icon} ${cat.name}</span>
+                <span class="category-badge">${cat.transaction_count || 0}</span>
+            `;
+            div.onclick = () => selectLevel1(cat);
+            list.appendChild(div);
+        });
+    });
+    
+    // Add "New Category Type" option
+    const newDiv = document.createElement('div');
+    newDiv.className = 'category-option new-category';
+    newDiv.innerHTML = `<span>➕ Add New Category Type...</span>`;
+    newDiv.onclick = () => promptNewCategory(null, 1);
+    list.appendChild(newDiv);
+    
+    // Hide level 2 and 3
+    document.getElementById('level-2-column').style.display = 'none';
+    document.getElementById('level-3-column').style.display = 'none';
+    
+    updateBreadcrumb();
+}
+
+function selectLevel1(category) {
+    selectedCategoryPath = [category];
+    
+    // Show level 2 children
+    const children = allCategoriesForPicker.filter(c => c.parent_id === category.id);
+    
+    if (children.length > 0) {
+        showLevel2Categories(children);
+        document.getElementById('level-2-column').style.display = 'block';
+        document.getElementById('level-2-title').textContent = category.name;
+    } else {
+        // No children, can select this
+        document.getElementById('level-2-column').style.display = 'none';
+        document.getElementById('level-3-column').style.display = 'none';
+    }
+    
+    updateBreadcrumb();
+}
+
+function showLevel2Categories(categories) {
+    const list = document.getElementById('level-2-list');
+    list.innerHTML = '';
+    
+    categories.forEach(cat => {
+        const div = document.createElement('div');
+        const hasChildren = allCategoriesForPicker.some(c => c.parent_id === cat.id);
+        div.className = `category-option ${hasChildren ? 'has-children' : ''}`;
+        div.innerHTML = `
+            <span>${cat.name}</span>
+            <span class="category-badge">${cat.transaction_count || 0}</span>
+        `;
+        div.onclick = () => selectLevel2(cat);
+        list.appendChild(div);
+    });
+    
+    // Add "New..." option
+    const newDiv = document.createElement('div');
+    newDiv.className = 'category-option new-category';
+    newDiv.innerHTML = `<span>➕ Add New ${selectedCategoryPath[0].name}...</span>`;
+    newDiv.onclick = () => promptNewCategory(selectedCategoryPath[0].id, 2);
+    list.appendChild(newDiv);
+    
+    document.getElementById('level-3-column').style.display = 'none';
+}
+
+function selectLevel2(category) {
+    selectedCategoryPath = [selectedCategoryPath[0], category];
+    
+    // Show level 3 children or allow selection
+    const children = allCategoriesForPicker.filter(c => c.parent_id === category.id);
+    
+    if (children.length > 0) {
+        showLevel3Categories(children);
+        document.getElementById('level-3-column').style.display = 'block';
+        document.getElementById('level-3-title').textContent = category.name;
+    } else {
+        // Can select this category
+        document.getElementById('level-3-column').style.display = 'none';
+        finalizeCategorySelection(category.id);
+    }
+    
+    updateBreadcrumb();
+}
+
+function showLevel3Categories(categories) {
+    const list = document.getElementById('level-3-list');
+    list.innerHTML = '';
+    
+    categories.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'category-option';
+        div.innerHTML = `
+            <span>${cat.name}</span>
+            <span class="category-badge">${cat.transaction_count || 0}</span>
+        `;
+        div.onclick = () => selectLevel3(cat);
+        list.appendChild(div);
+    });
+    
+    // Add "New..." option
+    const newDiv = document.createElement('div');
+    newDiv.className = 'category-option new-category';
+    newDiv.innerHTML = `<span>➕ Add New ${selectedCategoryPath[1].name}...</span>`;
+    newDiv.onclick = () => promptNewCategory(selectedCategoryPath[1].id, 3);
+    list.appendChild(newDiv);
+}
+
+function selectLevel3(category) {
+    selectedCategoryPath = [selectedCategoryPath[0], selectedCategoryPath[1], category];
+    updateBreadcrumb();
+    finalizeCategorySelection(category.id);
+}
+
+function updateBreadcrumb() {
+    const breadcrumb = document.getElementById('category-breadcrumb');
+    
+    if (selectedCategoryPath.length === 0) {
+        breadcrumb.innerHTML = 'Select a category type...';
+    } else {
+        const path = selectedCategoryPath.map(c => c.name).join(' <span class="separator">→</span> ');
+        breadcrumb.innerHTML = path;
+    }
+}
+
+async function finalizeCategorySelection(categoryId) {
+    // Update the transaction
+    await updateTransactionCategory(currentTransaction, categoryId);
+    closeCategoryPicker();
+}
+
+async function selectUncategorized() {
+    await updateTransactionCategory(currentTransaction, null);
+    closeCategoryPicker();
+}
+
+async function promptNewCategory(parentId, level) {
+    const parentName = selectedCategoryPath.length > 0 
+        ? selectedCategoryPath[selectedCategoryPath.length - 1].name 
+        : 'category';
+    
+    const name = prompt(`Enter new ${parentName} subcategory name:`);
+    
+    if (!name || !name.trim()) {
+        return;
+    }
+    
+    try {
+        // Determine type from parent
+        let categoryType = 'expense';  // default
+        if (selectedCategoryPath.length > 0) {
+            categoryType = selectedCategoryPath[0].type;
+        }
+        
+        const response = await fetch('/categories/api/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name.trim(),
+                level: level,
+                type: categoryType,
+                parent_id: parentId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ Category "${name}" created successfully!`);
+            // Reload categories and refresh picker
+            await loadCategoriesForPicker();
+            showLevel1Categories();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error creating category: ' + error.message);
+    }
+}
+
+// Close modal on outside click
+document.getElementById('category-picker-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCategoryPicker();
+    }
+});
+</script>
+

@@ -37,6 +37,11 @@
         <div id="expense-categories" class="category-tree"></div>
     </div>
     
+    <div class="card">
+        <h2>💹 Savings & Investments</h2>
+        <div id="transfer-categories" class="category-tree"></div>
+    </div>
+    
     <!-- Top Categorization Rules -->
     <div class="card">
         <h2>🔍 Top Categorization Rules</h2>
@@ -243,13 +248,16 @@ async function loadCategoryHierarchy() {
         
         const income = [];
         const expense = [];
+        const transfer = [];
         
         categories.forEach(cat => {
             if (cat.parent_id === null) {
                 if (cat.type === 'income') {
                     income.push(cat);
-                } else {
+                } else if (cat.type === 'expense') {
                     expense.push(cat);
+                } else if (cat.type === 'transfer') {
+                    transfer.push(cat);
                 }
             } else {
                 const parent = catById[cat.parent_id];
@@ -261,6 +269,7 @@ async function loadCategoryHierarchy() {
         
         displayCategoryTree('income-categories', income);
         displayCategoryTree('expense-categories', expense);
+        displayCategoryTree('transfer-categories', transfer);
     } catch (error) {
         console.error('Error loading hierarchy:', error);
     }
