@@ -16,7 +16,7 @@ This backlog contains all Product Backlog Items (PBIs) for the Financial Assista
 | 2 | User | As a user, I want to import my bank statements from CSV files so that I can analyze my financial transactions | Done | [Details](./2/prd.md) - ✅ CSV upload working, flexible parser (100+ formats), transaction validation, duplicate detection, transaction storage, preview UI, comprehensive tests (125+ passing) |
 | 3 | User | As a user, I want to manage multiple bank accounts so that I can track all my finances in one place | Done | [Details](./3/prd.md) - ✅ Account details page, transaction statistics, session cookie bug fixed, 125 tests passing, large file imports working (815+ transactions) |
 | 4 | User | As a user, I want transactions automatically categorized so that I don't have to manually categorize every transaction | Done | [Details](./4/prd.md) - ✅ 30 categories, 56 auto-rules, pattern matching engine, manual categorization UI, learning system, 80-90% auto-categorization rate |
-| 5 | User | As a user, I want to see visual reports of my spending so that I can understand my financial patterns | Proposed | [Details](./5/prd.md) - Monthly expense charts, income vs expenses timeline, category trends, year-over-year comparison, date range filtering, CSV export |
+| 5 | User | As a user, I want to see visual reports of my spending so that I can understand my financial patterns | Agreed | [Details](./5/prd.md) - Monthly expense charts, income vs expenses timeline, category trends, year-over-year comparison, date range filtering, CSV export |
 | 6 | User | As a user, I want to search and filter transactions so that I can quickly find specific purchases or patterns | Proposed | [Details](./6/prd.md) - Search by date/amount/merchant/category, multi-criteria filtering, add notes to transactions, custom tags, bulk operations |
 | 7 | User | As a user, I want to set budgets for categories so that I can control my spending | Proposed | [Details](./7/prd.md) - Create monthly/yearly budgets, budget templates, visual progress indicators, budget vs actual reports, overspending alerts |
 | 8 | User | As a user, I want to track savings goals so that I can work toward financial objectives | Proposed | [Details](./8/prd.md) - Define goals with targets and dates, track progress, allocate income to goals, achievement predictions, visual indicators |
@@ -35,6 +35,8 @@ This backlog contains all Product Backlog Items (PBIs) for the Financial Assista
 | 2025-10-19 20:35:00 | 2 | Status Change | PBI 2 moved from Agreed to Done - All 10 tasks complete (9 Done, 1 deferred), CSV import fully functional with duplicate detection, 125+ tests passing | Saeed |
 | 2025-10-19 21:40:00 | 3 | Status Change | PBI 3 moved from Proposed to Done - All 4 tasks complete, account details page with statistics, session cookie bug fixed for large imports, 125 tests passing | Saeed |
 | 2025-10-19 22:20:00 | 4 | Status Change | PBI 4 moved from Proposed to Done - Auto-categorization engine with 56 rules, manual categorization UI, learning system, categories page, 80-90% auto-categorization | Saeed |
+| 2025-10-19 23:20:00 | 4 | Enhancement | Category picker UX improved - Compact design (650x500px), fixed positioning always in viewport, scrollable columns, "Add New" options visible | Saeed |
+| 2025-10-19 23:25:00 | 5 | Status Change | PBI 5 moved from Proposed to Agreed - Ready to implement visual reports and spending analysis with Chart.js, 8 tasks defined | Saeed |
 
 ## Phase Breakdown
 
