@@ -76,7 +76,63 @@
     </div>
     
     <!-- Success Section -->
-    <div id="success-section" class="alert alert-success" style="display: none;"></div>
+    <div id="success-section" class="alert alert-success" style="display: none;">
+        <div id="success-message"></div>
+        <button class="btn btn-primary" onclick="resetImportForm()" style="margin-top: 15px;">
+            📁 Import Another CSV
+        </button>
+    </div>
+    
+    <!-- Manual Transaction Entry -->
+    <div class="card" style="margin-top: 30px;">
+        <h2>➕ Add Manual Transaction</h2>
+        <p>Enter a transaction manually (for cash purchases or corrections)</p>
+        
+        <form id="manual-transaction-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="manual-account">Account *</label>
+                    <select id="manual-account" required>
+                        <option value="">-- Choose Account --</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">{{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="manual-date">Date *</label>
+                    <input type="date" id="manual-date" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="manual-description">Description *</label>
+                <input type="text" id="manual-description" required 
+                       placeholder="e.g., Coffee at Starbucks">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="manual-amount">Amount *</label>
+                    <input type="number" id="manual-amount" step="0.01" required 
+                           placeholder="0.00">
+                    <small>Positive for income/deposits, negative for expenses/withdrawals</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="manual-notes">Notes (optional)</label>
+                    <input type="text" id="manual-notes" 
+                           placeholder="Additional notes">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success">💾 Add Transaction</button>
+        </form>
+        
+        <div id="manual-success" class="alert alert-success" style="display: none; margin-top: 15px;"></div>
+        <div id="manual-error" class="alert alert-error" style="display: none; margin-top: 15px;"></div>
+    </div>
 </div>
 
 <style>
@@ -116,6 +172,20 @@
     .form-group small {
         color: #666;
         font-size: 12px;
+        display: block;
+        margin-top: 5px;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
     }
     
     .btn {
@@ -379,10 +449,11 @@
             }
             
             // Show success
-            successSection.innerHTML = `
-                <strong>Success!</strong> ${data.message}
+            document.getElementById('success-message').innerHTML = `
+                <strong>✅ Success!</strong> ${data.message}
                 <br><br>
-                <a href="/accounts" class="btn btn-primary">View Accounts</a>
+                <a href="/transactions" class="btn btn-secondary">View All Transactions</a>
+                <a href="/accounts" class="btn btn-secondary">View Accounts</a>
             `;
             successSection.style.display = 'block';
             
@@ -402,6 +473,76 @@
     cancelBtn.addEventListener('click', () => {
         previewSection.style.display = 'none';
         uploadForm.reset();
+    });
+    
+    // Reset import form to import another CSV
+    function resetImportForm() {
+        uploadSection.style.display = 'block';
+        successSection.style.display = 'none';
+        previewSection.style.display = 'none';
+        errorSection.style.display = 'none';
+        uploadForm.reset();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // Handle manual transaction form
+    const manualForm = document.getElementById('manual-transaction-form');
+    const manualSuccess = document.getElementById('manual-success');
+    const manualError = document.getElementById('manual-error');
+    
+    manualForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        manualSuccess.style.display = 'none';
+        manualError.style.display = 'none';
+        
+        const formData = {
+            account_id: parseInt(document.getElementById('manual-account').value),
+            date: document.getElementById('manual-date').value,
+            description: document.getElementById('manual-description').value,
+            amount: parseFloat(document.getElementById('manual-amount').value),
+            notes: document.getElementById('manual-notes').value || null
+        };
+        
+        try {
+            const response = await fetch('/import/manual', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to add transaction');
+            }
+            
+            // Show success
+            manualSuccess.innerHTML = `
+                <strong>✅ Success!</strong> Transaction added successfully!
+                <br>
+                <a href="/transactions" class="btn btn-secondary" style="margin-top: 10px;">View Transactions</a>
+            `;
+            manualSuccess.style.display = 'block';
+            
+            // Reset form
+            manualForm.reset();
+            
+            // Scroll to success message
+            manualSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+        } catch (error) {
+            manualError.textContent = '❌ Error: ' + error.message;
+            manualError.style.display = 'block';
+        }
+    });
+    
+    // Set today as default date for manual entry
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('manual-date').value = today;
     });
 </script>
 {% endblock %}

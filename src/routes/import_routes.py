@@ -266,3 +266,96 @@ def confirm_import():
     except Exception as e:
         return jsonify({'error': f'Failed to save transactions: {str(e)}'}), 500
 
+
+@import_bp.route('/manual', methods=['POST'])
+def manual_transaction():
+    """
+    Add a manual transaction.
+    
+    Request JSON:
+        {
+            "account_id": int,
+            "date": "YYYY-MM-DD",
+            "description": str,
+            "amount": float,
+            "notes": str (optional)
+        }
+    
+    Returns:
+        JSON with success status
+    """
+    from flask import current_app
+    from datetime import datetime
+    
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    # Extract fields
+    account_id = data.get('account_id')
+    date_str = data.get('date')
+    description = data.get('description')
+    amount = data.get('amount')
+    notes = data.get('notes')
+    
+    # Validate required fields
+    if not all([account_id, date_str, description, amount is not None]):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    try:
+        # Parse date
+        transaction_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        
+        # Validate account exists
+        account_model = Account(current_app.config['DATABASE'])
+        account = account_model.get_by_id(account_id)
+        if not account:
+            return jsonify({'error': 'Account not found'}), 404
+        
+        # Create transaction dict for validation
+        transaction = {
+            'account_id': account_id,
+            'date': transaction_date,
+            'description': description.strip(),
+            'amount': float(amount),
+            'notes': notes
+        }
+        
+        # Validate transaction
+        validator = TransactionValidator(current_app.config['DATABASE'])
+        result = validator.validate_transaction(transaction)
+        
+        if not result.is_valid:
+            errors = ', '.join([e.message for e in result.errors])
+            return jsonify({'error': f'Validation failed: {errors}'}), 400
+        
+        # Check for duplicates
+        detector = DuplicateDetector(current_app.config['DATABASE'])
+        duplicate_check = detector.check_duplicate(transaction)
+        
+        if duplicate_check['is_duplicate']:
+            return jsonify({
+                'error': f'Duplicate transaction detected (confidence: {duplicate_check["confidence"]:.0%}). This transaction may already exist.'
+            }), 400
+        
+        # Save transaction
+        transaction_id = Transaction.create(
+            account_id=account_id,
+            transaction_date=transaction_date,
+            description=description.strip(),
+            amount=float(amount),
+            notes=notes
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Transaction added successfully',
+            'transaction_id': transaction_id
+        })
+    
+    except ValueError as e:
+        return jsonify({'error': f'Invalid data format: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'error': f'Failed to add transaction: {str(e)}'}), 500
+
