@@ -123,41 +123,387 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
-// Placeholder for chart initialization
-console.log('Reports page loaded');
-console.log('Chart.js version:', Chart.version);
+console.log('Reports page loaded - Chart.js version:', Chart.version);
 
-// Placeholder functions (to be implemented in subsequent tasks)
-function loadAccounts() {
-    console.log('loadAccounts() - to be implemented');
+// Chart instances (global so they can be destroyed and recreated)
+let incomeExpenseChart = null;
+let categoryPieChart = null;
+let monthlyCategoryChart = null;
+let topCategoriesChart = null;
+
+// Helper function to format currency
+function formatCurrency(amount) {
+    return '$' + Math.abs(amount).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
 
-function loadIncomeExpenseChart() {
-    console.log('loadIncomeExpenseChart() - to be implemented');
-    document.getElementById('income-expense-loading').style.display = 'none';
-    document.getElementById('income-expense-empty').style.display = 'block';
+// Helper function to get filter parameters
+function getFilterParams() {
+    const params = new URLSearchParams();
+    
+    // Account filter
+    const accountId = document.getElementById('account-filter').value;
+    if (accountId && accountId !== 'all') {
+        params.append('account_id', accountId);
+    }
+    
+    // Date range filter
+    const dateRange = document.getElementById('date-range').value;
+    const [startDate, endDate] = calculateDateRange(dateRange);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    return params;
 }
 
-function loadCategoryPieChart() {
-    console.log('loadCategoryPieChart() - to be implemented');
-    document.getElementById('category-pie-loading').style.display = 'none';
-    document.getElementById('category-pie-empty').style.display = 'block';
+// Calculate date range based on preset
+function calculateDateRange(preset) {
+    const today = new Date();
+    let startDate, endDate = today;
+    
+    switch(preset) {
+        case 'this-month':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+        case 'last-month':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+            break;
+        case 'last-3-months':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+            break;
+        case 'last-6-months':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+            break;
+        case 'last-12-months':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 12, 1);
+            break;
+        case 'this-year':
+            startDate = new Date(today.getFullYear(), 0, 1);
+            break;
+        case 'last-year':
+            startDate = new Date(today.getFullYear() - 1, 0, 1);
+            endDate = new Date(today.getFullYear() - 1, 11, 31);
+            break;
+        case 'custom':
+            const startInput = document.getElementById('start-date').value;
+            const endInput = document.getElementById('end-date').value;
+            return [startInput, endInput];
+        default:
+            startDate = new Date(today.getFullYear(), today.getMonth() - 12, 1);
+    }
+    
+    return [
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
+    ];
 }
 
-function loadMonthlyCategoryChart() {
-    console.log('loadMonthlyCategoryChart() - to be implemented');
-    document.getElementById('monthly-category-loading').style.display = 'none';
-    document.getElementById('monthly-category-empty').style.display = 'block';
+// Show/hide chart states
+function showLoading(chartId) {
+    document.getElementById(`${chartId}-loading`).style.display = 'flex';
+    document.getElementById(`${chartId}-container`).style.display = 'none';
+    document.getElementById(`${chartId}-error`).style.display = 'none';
+    document.getElementById(`${chartId}-empty`).style.display = 'none';
 }
 
-function loadTopCategoriesChart() {
-    console.log('loadTopCategoriesChart() - to be implemented');
-    document.getElementById('top-categories-loading').style.display = 'none';
-    document.getElementById('top-categories-empty').style.display = 'block';
+function showChart(chartId) {
+    document.getElementById(`${chartId}-loading`).style.display = 'none';
+    document.getElementById(`${chartId}-container`).style.display = 'block';
+    document.getElementById(`${chartId}-error`).style.display = 'none';
+    document.getElementById(`${chartId}-empty`).style.display = 'none';
 }
 
+function showEmpty(chartId) {
+    document.getElementById(`${chartId}-loading`).style.display = 'none';
+    document.getElementById(`${chartId}-container`).style.display = 'none';
+    document.getElementById(`${chartId}-error`).style.display = 'none';
+    document.getElementById(`${chartId}-empty`).style.display = 'block';
+}
+
+function showError(chartId) {
+    document.getElementById(`${chartId}-loading`).style.display = 'none';
+    document.getElementById(`${chartId}-container`).style.display = 'none';
+    document.getElementById(`${chartId}-error`).style.display = 'block';
+    document.getElementById(`${chartId}-empty`).style.display = 'none';
+}
+
+// Load accounts for filter dropdown
+async function loadAccounts() {
+    try {
+        const response = await fetch('/accounts/api/');
+        const accounts = await response.json();
+        
+        const select = document.getElementById('account-filter');
+        // Clear existing options except "All Accounts"
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+        
+        accounts.forEach(account => {
+            const option = document.createElement('option');
+            option.value = account.id;
+            option.textContent = `${account.name} (${account.type})`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading accounts:', error);
+    }
+}
+
+// Load Income vs Expenses Line Chart
+async function loadIncomeExpenseChart() {
+    const chartId = 'income-expense';
+    showLoading(chartId);
+    
+    try {
+        const params = getFilterParams();
+        const response = await fetch(`/reports/api/income-expenses?${params}`);
+        const data = await response.json();
+        
+        if (!data.labels || data.labels.length === 0) {
+            showEmpty(chartId);
+            return;
+        }
+        
+        if (incomeExpenseChart) {
+            incomeExpenseChart.destroy();
+        }
+        
+        const ctx = document.getElementById('income-expense-chart').getContext('2d');
+        incomeExpenseChart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        showChart(chartId);
+    } catch (error) {
+        console.error('Error loading income/expense chart:', error);
+        showError(chartId);
+    }
+}
+
+// Load Category Pie Chart
+async function loadCategoryPieChart() {
+    const chartId = 'category-pie';
+    showLoading(chartId);
+    
+    try {
+        const params = getFilterParams();
+        const response = await fetch(`/reports/api/category-breakdown?${params}`);
+        const data = await response.json();
+        
+        if (!data.labels || data.labels.length === 0) {
+            showEmpty(chartId);
+            return;
+        }
+        
+        if (categoryPieChart) {
+            categoryPieChart.destroy();
+        }
+        
+        const ctx = document.getElementById('category-pie-chart').getContext('2d');
+        categoryPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = formatCurrency(context.parsed);
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        showChart(chartId);
+    } catch (error) {
+        console.error('Error loading category pie chart:', error);
+        showError(chartId);
+    }
+}
+
+// Load Monthly Category Stacked Bar Chart
+async function loadMonthlyCategoryChart() {
+    const chartId = 'monthly-category';
+    showLoading(chartId);
+    
+    try {
+        const params = getFilterParams();
+        const response = await fetch(`/reports/api/monthly-category-trends?${params}`);
+        const data = await response.json();
+        
+        if (!data.labels || data.labels.length === 0) {
+            showEmpty(chartId);
+            return;
+        }
+        
+        if (monthlyCategoryChart) {
+            monthlyCategoryChart.destroy();
+        }
+        
+        const ctx = document.getElementById('monthly-category-chart').getContext('2d');
+        monthlyCategoryChart = new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        showChart(chartId);
+    } catch (error) {
+        console.error('Error loading monthly category chart:', error);
+        showError(chartId);
+    }
+}
+
+// Load Top Categories Horizontal Bar Chart
+async function loadTopCategoriesChart() {
+    const chartId = 'top-categories';
+    showLoading(chartId);
+    
+    try {
+        const params = getFilterParams();
+        const response = await fetch(`/reports/api/top-categories?${params}`);
+        const data = await response.json();
+        
+        if (!data.labels || data.labels.length === 0) {
+            showEmpty(chartId);
+            return;
+        }
+        
+        if (topCategoriesChart) {
+            topCategoriesChart.destroy();
+        }
+        
+        const ctx = document.getElementById('top-categories-chart').getContext('2d');
+        topCategoriesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: data.datasets
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const index = context.dataIndex;
+                                const amount = formatCurrency(context.parsed.x);
+                                const count = data.metadata.transaction_counts[index];
+                                const avg = formatCurrency(data.metadata.averages[index]);
+                                return [
+                                    `Total: ${amount}`,
+                                    `Transactions: ${count}`,
+                                    `Average: ${avg}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        showChart(chartId);
+    } catch (error) {
+        console.error('Error loading top categories chart:', error);
+        showError(chartId);
+    }
+}
+
+// Refresh all charts
 function refreshAllCharts() {
-    console.log('Refreshing all charts...');
     loadIncomeExpenseChart();
     loadCategoryPieChart();
     loadMonthlyCategoryChart();
@@ -167,7 +513,11 @@ function refreshAllCharts() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initializing reports page...');
+    
+    // Load accounts for filter
     loadAccounts();
+    
+    // Load all charts
     refreshAllCharts();
     
     // Wire up filter controls
@@ -186,9 +536,10 @@ document.addEventListener('DOMContentLoaded', () => {
         customDates.style.display = e.target.value === 'custom' ? 'flex' : 'none';
     });
     
-    // Export placeholder
+    // Export functionality
     document.getElementById('export-csv').addEventListener('click', () => {
-        alert('Export functionality will be implemented in task 5-8');
+        const params = getFilterParams();
+        window.location.href = `/reports/api/export?${params}`;
     });
 });
 </script>
