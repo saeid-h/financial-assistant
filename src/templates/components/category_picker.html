@@ -54,7 +54,20 @@
 .category-picker-content {
     max-width: 900px;
     width: 95%;
-    max-height: 80vh;
+    max-height: 85vh;
+    margin: auto;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .category-picker-body {
@@ -201,18 +214,33 @@ function openCategoryPicker(transactionId) {
     selectedCategoryPath = [];
     selectedCategoryId = null;
     
+    // Remember scroll position to restore later
+    const scrollPosition = window.scrollY;
+    
     // Load categories and show modal
     loadCategoriesForPicker().then(() => {
         showLevel1Categories();
-        document.getElementById('category-picker-modal').classList.add('active');
+        const modal = document.getElementById('category-picker-modal');
+        modal.classList.add('active');
         document.getElementById('assign-category-btn').disabled = true;
+        
+        // Prevent body scroll while modal is open
+        document.body.style.overflow = 'hidden';
+        
+        // Focus on modal for keyboard accessibility
+        modal.focus();
     });
 }
 
 function closeCategoryPicker() {
     document.getElementById('category-picker-modal').classList.remove('active');
+    
+    // Restore body scroll
+    document.body.style.overflow = 'auto';
+    
     currentTransaction = null;
     selectedCategoryPath = [];
+    selectedCategoryId = null;
 }
 
 async function loadCategoriesForPicker() {
