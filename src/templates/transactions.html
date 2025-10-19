@@ -542,7 +542,7 @@
     }
     
     // Update transaction category
-    async function updateTransactionCategory(transactionId, categoryId) {
+    async function updateTransactionCategory(transactionId, categoryId, learn = false) {
         try {
             const response = await fetch(`/categories/api/categorize/${transactionId}`, {
                 method: 'PUT',
@@ -551,18 +551,23 @@
                 },
                 body: JSON.stringify({
                     category_id: categoryId ? parseInt(categoryId) : null,
-                    learn: false  // Don't auto-learn for now
+                    learn: learn  // Learn from categorization if enabled
                 })
             });
             
             const data = await response.json();
             
             if (data.success) {
-                // Reload stats to reflect changes
+                // Reload both stats and transactions to show updated category
                 loadStats();
+                loadTransactions();
+                
+                if (data.rule_created) {
+                    console.log('✓ New categorization rule created automatically!');
+                }
             } else {
                 alert('Error updating category: ' + data.error);
-                loadTransactions();  // Reload to reset dropdown
+                loadTransactions();
             }
         } catch (error) {
             console.error('Error updating category:', error);
