@@ -32,7 +32,7 @@ A local web-based financial analysis application for tracking, categorizing, and
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/saeid-h/financial-assistant.git
    cd financial-assistant
    ```
 
@@ -260,5 +260,6 @@ For questions or issues, refer to the documentation in the `docs/` directory or 
 
 **Version**: 1.0.0  
 **Author**: Saeed Hoss  
+**Repository**: https://github.com/saeid-h/financial-assistant  
 **Last Updated**: 2025-10-19
 
