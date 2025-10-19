@@ -182,7 +182,7 @@ def confirm_import():
         
         for txn in transactions:
             txn['account_id'] = account_id
-            result = validator.validate(txn)
+            result = validator.validate_transaction(txn)
             if result.is_valid:
                 valid_transactions.append(txn)
         

@@ -14,7 +14,7 @@ This backlog contains all Product Backlog Items (PBIs) for the Financial Assista
 |----|-------|------------|--------|----------------------------------|
 | 1 | Developer | As a developer, I want to set up the project infrastructure so that I have a solid foundation for building features | Done | [Details](./1/prd.md) - ✅ Git repo initialized, Python venv created, Flask app running, database schema created, tests passing (13/13) |
 | 2 | User | As a user, I want to import my bank statements from CSV files so that I can analyze my financial transactions | Done | [Details](./2/prd.md) - ✅ CSV upload working, flexible parser (100+ formats), transaction validation, duplicate detection, transaction storage, preview UI, comprehensive tests (125+ passing) |
-| 3 | User | As a user, I want to manage multiple bank accounts so that I can track all my finances in one place | Proposed | [Details](./3/prd.md) - Create/edit/delete accounts, view account list, link transactions to accounts, account-specific views |
+| 3 | User | As a user, I want to manage multiple bank accounts so that I can track all my finances in one place | Done | [Details](./3/prd.md) - ✅ Account details page, transaction statistics, session cookie bug fixed, 125 tests passing, large file imports working (815+ transactions) |
 | 4 | User | As a user, I want transactions automatically categorized so that I don't have to manually categorize every transaction | Proposed | [Details](./4/prd.md) - 2-3 level category hierarchy, predefined categories, pattern-based auto-categorization, user confirmation workflow, learn from corrections, manual override |
 | 5 | User | As a user, I want to see visual reports of my spending so that I can understand my financial patterns | Proposed | [Details](./5/prd.md) - Monthly expense charts, income vs expenses timeline, category trends, year-over-year comparison, date range filtering, CSV export |
 | 6 | User | As a user, I want to search and filter transactions so that I can quickly find specific purchases or patterns | Proposed | [Details](./6/prd.md) - Search by date/amount/merchant/category, multi-criteria filtering, add notes to transactions, custom tags, bulk operations |
@@ -33,6 +33,7 @@ This backlog contains all Product Backlog Items (PBIs) for the Financial Assista
 | 2025-10-19 18:30:00 | 2 | Status Change | PBI 2 moved from Proposed to Agreed - Ready to begin CSV import implementation | Saeed |
 | 2025-10-19 18:33:00 | 1 | Repository Setup | PBI 1 code pushed to GitHub: https://github.com/saeid-h/financial-assistant | Saeed |
 | 2025-10-19 20:35:00 | 2 | Status Change | PBI 2 moved from Agreed to Done - All 10 tasks complete (9 Done, 1 deferred), CSV import fully functional with duplicate detection, 125+ tests passing | Saeed |
+| 2025-10-19 21:40:00 | 3 | Status Change | PBI 3 moved from Proposed to Done - All 4 tasks complete, account details page with statistics, session cookie bug fixed for large imports, 125 tests passing | Saeed |
 
 ## Phase Breakdown
 

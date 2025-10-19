@@ -13,6 +13,15 @@ class Transaction:
     DB_PATH = 'data/financial_assistant.db'
     
     @staticmethod
+    def _get_db_path():
+        """Get database path from Flask config or use default."""
+        try:
+            from flask import current_app
+            return current_app.config.get('DATABASE', Transaction.DB_PATH)
+        except (ImportError, RuntimeError):
+            return Transaction.DB_PATH
+    
+    @staticmethod
     def create(account_id: int, transaction_date: date, description: str, 
                amount: float, category_id: Optional[int] = None,
                notes: Optional[str] = None, tags: Optional[str] = None) -> int:
@@ -31,7 +40,7 @@ class Transaction:
         Returns:
             Transaction ID
         """
-        conn = sqlite3.connect(Transaction.DB_PATH)
+        conn = sqlite3.connect(Transaction._get_db_path())
         cursor = conn.cursor()
         
         cursor.execute("""
@@ -60,7 +69,7 @@ class Transaction:
         Returns:
             Number of transactions created
         """
-        conn = sqlite3.connect(Transaction.DB_PATH)
+        conn = sqlite3.connect(Transaction._get_db_path())
         cursor = conn.cursor()
         
         # Prepare data for bulk insert
@@ -92,7 +101,7 @@ class Transaction:
     @staticmethod
     def get_by_id(transaction_id: int) -> Optional[Dict]:
         """Get transaction by ID."""
-        conn = sqlite3.connect(Transaction.DB_PATH)
+        conn = sqlite3.connect(Transaction._get_db_path())
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
@@ -119,7 +128,7 @@ class Transaction:
         Returns:
             List of transaction dictionaries
         """
-        conn = sqlite3.connect(Transaction.DB_PATH)
+        conn = sqlite3.connect(Transaction._get_db_path())
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
@@ -153,7 +162,7 @@ class Transaction:
         Returns:
             List of transaction dictionaries
         """
-        conn = sqlite3.connect(Transaction.DB_PATH)
+        conn = sqlite3.connect(Transaction._get_db_path())
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
@@ -183,7 +192,7 @@ class Transaction:
         Returns:
             True if deleted, False if not found
         """
-        conn = sqlite3.connect(Transaction.DB_PATH)
+        conn = sqlite3.connect(Transaction._get_db_path())
         cursor = conn.cursor()
         
         cursor.execute("DELETE FROM transactions WHERE id = ?", (transaction_id,))
@@ -197,7 +206,7 @@ class Transaction:
     @staticmethod
     def count_by_account(account_id: int) -> int:
         """Get transaction count for an account."""
-        conn = sqlite3.connect(Transaction.DB_PATH)
+        conn = sqlite3.connect(Transaction._get_db_path())
         cursor = conn.cursor()
         
         cursor.execute("""

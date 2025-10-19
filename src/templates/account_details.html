@@ -1,0 +1,436 @@
+{% extends "base.html" %}
+
+{% block title %}{{ account.name }} - Financial Assistant{% endblock %}
+
+{% block content %}
+<div class="account-details-container">
+    <!-- Header -->
+    <div class="account-header">
+        <div class="account-info">
+            <h1>{{ account.name }}</h1>
+            <div class="account-meta">
+                <span class="account-type">{{ account.type|title }}</span>
+                {% if account.institution %}
+                <span class="account-institution">{{ account.institution }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="account-actions">
+            <button class="btn btn-secondary" onclick="openEditAccountModal({{ account.id }}, '{{ account.name }}', '{{ account.type }}', '{{ account.institution or '' }}')">
+                <svg width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                </svg>
+                Edit Account
+            </button>
+            <a href="/accounts" class="btn btn-outline">
+                <svg width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to Accounts
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Transactions</div>
+            <div class="stat-value">{{ statistics.total_transactions }}</div>
+        </div>
+        <div class="stat-card positive">
+            <div class="stat-label">Total Credits (Income/Deposits)</div>
+            <div class="stat-value">{{ statistics.total_credits | format_currency }}</div>
+        </div>
+        <div class="stat-card negative">
+            <div class="stat-label">Total Debits (Expenses/Withdrawals)</div>
+            <div class="stat-value">{{ statistics.total_debits | format_currency }}</div>
+        </div>
+        <div class="stat-card {% if statistics.net_cash_flow >= 0 %}positive{% else %}negative{% endif %}">
+            <div class="stat-label">Net Cash Flow</div>
+            <div class="stat-value">{{ statistics.net_cash_flow | format_currency }}</div>
+        </div>
+    </div>
+
+    <!-- Transactions Section -->
+    <div class="transactions-section">
+        <h2>Transactions</h2>
+        
+        {% if transactions %}
+        <div class="table-responsive">
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.date }}</td>
+                        <td>{{ transaction.description }}</td>
+                        <td>
+                            {% if transaction.category_name %}
+                            <span class="category-badge">{{ transaction.category_name }}</span>
+                            {% else %}
+                            <span class="category-badge uncategorized">Uncategorized</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right {% if transaction.amount >= 0 %}positive{% else %}negative{% endif %}">
+                            <span class="transaction-amount">{{ transaction.amount | format_currency }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <svg width="64" height="64" fill="currentColor" class="bi bi-inbox" viewBox="0 0 16 16">
+                <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4H4.98zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438L14.933 9zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374l3.7-4.625z"/>
+            </svg>
+            <h3>No Transactions Yet</h3>
+            <p>This account doesn't have any transactions. Import a CSV file to get started.</p>
+            <a href="/import" class="btn btn-primary">Import Transactions</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Edit Account Modal (reuse from accounts.html) -->
+<div id="editAccountModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditAccountModal()">&times;</span>
+        <h2>Edit Account</h2>
+        <form id="editAccountForm" onsubmit="handleEditAccount(event)">
+            <input type="hidden" id="editAccountId">
+            <div class="form-group">
+                <label for="editAccountName">Account Name *</label>
+                <input type="text" id="editAccountName" required>
+            </div>
+            <div class="form-group">
+                <label for="editAccountType">Account Type *</label>
+                <select id="editAccountType" required>
+                    <option value="checking">Checking</option>
+                    <option value="savings">Savings</option>
+                    <option value="credit">Credit Card</option>
+                    <option value="investment">Investment</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editAccountInstitution">Financial Institution</label>
+                <input type="text" id="editAccountInstitution" placeholder="e.g., Chase, Bank of America">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-danger" onclick="handleDeleteAccount()">Delete Account</button>
+                <div class="modal-actions-right">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditAccountModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.account-details-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.account-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.account-info h1 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+}
+
+.account-meta {
+    display: flex;
+    gap: 15px;
+}
+
+.account-type {
+    padding: 5px 12px;
+    background: #3498db;
+    color: white;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.account-institution {
+    color: #7f8c8d;
+    font-size: 0.95em;
+}
+
+.account-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid #3498db;
+}
+
+.stat-card.positive {
+    border-left-color: #27ae60;
+}
+
+.stat-card.negative {
+    border-left-color: #e74c3c;
+}
+
+.stat-label {
+    color: #7f8c8d;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.transactions-section {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.transactions-section h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.transactions-table thead {
+    background: #f8f9fa;
+}
+
+.transactions-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.transactions-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.transactions-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.transaction-amount {
+    font-weight: 600;
+}
+
+.positive .transaction-amount {
+    color: #27ae60;
+}
+
+.negative .transaction-amount {
+    color: #e74c3c;
+}
+
+.category-badge {
+    padding: 4px 10px;
+    background: #3498db;
+    color: white;
+    border-radius: 12px;
+    font-size: 0.85em;
+}
+
+.category-badge.uncategorized {
+    background: #95a5a6;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #7f8c8d;
+}
+
+.empty-state svg {
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    margin: 20px 0 10px 0;
+    color: #2c3e50;
+}
+
+.empty-state p {
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .account-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .account-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .account-actions button,
+    .account-actions a {
+        width: 100%;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Format currency values
+function formatCurrency(value) {
+    return '$' + Math.abs(value).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+// Update all currency displays on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-currency]').forEach(el => {
+        const value = parseFloat(el.getAttribute('data-currency'));
+        el.textContent = formatCurrency(value);
+    });
+});
+
+// Edit account modal functions (same as accounts.html)
+function openEditAccountModal(id, name, type, institution) {
+    document.getElementById('editAccountId').value = id;
+    document.getElementById('editAccountName').value = name;
+    document.getElementById('editAccountType').value = type;
+    document.getElementById('editAccountInstitution').value = institution || '';
+    document.getElementById('editAccountModal').style.display = 'block';
+}
+
+function closeEditAccountModal() {
+    document.getElementById('editAccountModal').style.display = 'none';
+}
+
+async function handleEditAccount(event) {
+    event.preventDefault();
+    
+    const id = document.getElementById('editAccountId').value;
+    const name = document.getElementById('editAccountName').value;
+    const type = document.getElementById('editAccountType').value;
+    const institution = document.getElementById('editAccountInstitution').value;
+    
+    try {
+        const response = await fetch(`/api/accounts/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, type, institution })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Account updated successfully!');
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('An error occurred while updating the account');
+        console.error(error);
+    }
+}
+
+async function handleDeleteAccount() {
+    const id = document.getElementById('editAccountId').value;
+    const name = document.getElementById('editAccountName').value;
+    
+    if (!confirm(`Are you sure you want to delete "${name}"? This will also delete all associated transactions. This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/accounts/${id}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message);
+            window.location.href = '/accounts';
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('An error occurred while deleting the account');
+        console.error(error);
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('editAccountModal');
+    if (event.target == modal) {
+        closeEditAccountModal();
+    }
+}
+</script>
+
+<!-- Custom filter to format currency -->
+{% block custom_filters %}
+<script>
+// Add custom Jinja filter for currency formatting
+</script>
+{% endblock %}
+{% endblock %}
+

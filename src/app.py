@@ -27,6 +27,15 @@ def create_app():
         'financial_assistant.db'
     )
     
+    # Custom Jinja filters
+    @app.template_filter('format_currency')
+    def format_currency(value):
+        """Format number as currency with $###,###.## format."""
+        try:
+            return f"${abs(float(value)):,.2f}"
+        except (ValueError, TypeError):
+            return "$0.00"
+    
     # Register routes
     register_routes(app)
     

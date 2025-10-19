@@ -4,6 +4,7 @@ Account routes for account management.
 
 from flask import Blueprint, request, jsonify, render_template, current_app
 from models.account import Account
+from models.transaction import Transaction
 
 
 # Create blueprint
@@ -223,4 +224,46 @@ def delete_account(account_id):
             'success': False,
             'error': 'An error occurred while deleting the account'
         }), 500
+
+
+@accounts_bp.route('/accounts/<int:account_id>/details')
+def account_details(account_id):
+    """
+    Display detailed account page with statistics and transactions.
+    
+    Args:
+        account_id: Account ID
+    
+    Returns:
+        Rendered account details page or 404
+    """
+    # Get account info
+    account_model = Account(current_app.config['DATABASE'])
+    account = account_model.get_by_id(account_id)
+    
+    if not account:
+        return render_template('404.html'), 404
+    
+    # Get account transactions
+    transactions = Transaction.get_by_account(account_id)
+    
+    # Calculate statistics
+    total_transactions = len(transactions)
+    total_credits = sum(t['amount'] for t in transactions if t['amount'] > 0)
+    total_debits = sum(t['amount'] for t in transactions if t['amount'] < 0)
+    net_cash_flow = total_credits + total_debits  # debits are negative
+    
+    statistics = {
+        'total_transactions': total_transactions,
+        'total_credits': total_credits,
+        'total_debits': abs(total_debits),
+        'net_cash_flow': net_cash_flow
+    }
+    
+    return render_template(
+        'account_details.html',
+        account=account,
+        statistics=statistics,
+        transactions=transactions
+    )
 

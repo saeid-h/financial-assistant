@@ -54,7 +54,6 @@
             border-radius: 8px;
             padding: 20px;
             transition: all 0.3s ease;
-            cursor: pointer;
             position: relative;
         }
         
@@ -64,19 +63,16 @@
             border-color: #667eea;
         }
         
-        .account-card::after {
-            content: "Click to edit";
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 0.75rem;
-            color: #999;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .account-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
         }
         
-        .account-card:hover::after {
-            opacity: 1;
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            flex: 1;
         }
         
         .account-card h3 {
@@ -366,11 +362,15 @@
             emptyState.style.display = 'none';
             
             container.innerHTML = accounts.map(account => `
-                <div class="account-card" onclick='openEditAccountModal(${JSON.stringify(account)})'>
+                <div class="account-card">
                     <h3>${escapeHtml(account.name)}</h3>
                     <span class="account-type type-${account.type}">${capitalizeFirst(account.type)}</span>
                     ${account.institution ? `<div class="account-institution">${escapeHtml(account.institution)}</div>` : ''}
                     <div class="account-date">Created: ${formatDate(account.created_at)}</div>
+                    <div class="account-card-actions">
+                        <a href="/accounts/${account.id}/details" class="btn btn-primary btn-small">View Transactions</a>
+                        <button class="btn btn-small" style="background: #6c757d; color: white;" onclick='event.stopPropagation(); openEditAccountModal(${JSON.stringify(account)})'>Edit</button>
+                    </div>
                 </div>
             `).join('');
         }

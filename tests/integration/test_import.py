@@ -171,6 +171,9 @@ def test_full_import_workflow(client, sample_account, tmp_path):
     
     # Step 2: Confirm import
     response = client.post('/import/confirm')
+    if response.status_code != 200:
+        print(f"Confirm import failed with status {response.status_code}")
+        print(f"Response data: {response.data.decode()}")
     assert response.status_code == 200
     confirm_result = json.loads(response.data)
     
