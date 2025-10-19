@@ -34,6 +34,10 @@ class CSVParser:
     DESCRIPTION_COLUMNS = ['description', 'merchant', 'payee', 'details', 
                           'memo', 'narrative', 'particulars', 'reference']
     
+    # Columns to ignore (optional metadata)
+    IGNORED_COLUMNS = ['status', 'member name', 'member', 'account holder',
+                      'card number', 'reference number', 'ref', 'balance']
+    
     AMOUNT_COLUMNS = ['amount', 'transaction amount', 'value']
     
     DEBIT_COLUMNS = ['debit', 'withdrawal', 'withdrawals', 'debit amount',

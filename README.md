@@ -93,6 +93,48 @@ A local web-based financial analysis application for tracking, categorizing, and
    
    **Important**: The Flask application must be running for the browser to access it!
 
+## Supported CSV Formats
+
+The application supports various CSV formats from different financial institutions:
+
+### Format 1: Standard Bank Statement
+```csv
+Date,Description,Amount
+10/14/2025,Grocery Store,-45.50
+10/15/2025,Salary Deposit,2500.00
+```
+
+### Format 2: Debit/Credit Columns
+```csv
+Date,Merchant,Debit,Credit
+10/14/2025,Grocery Store,45.50,
+10/15/2025,Salary,0,2500.00
+```
+
+### Format 3: Credit Card Statement (with Status and Member Name)
+```csv
+Status,Date,Description,Debit,Credit,Member Name
+Posted,10/14/2025,Amazon Purchase,125.50,,John Doe
+Posted,10/15/2025,Payment - Thank You,,500.00,John Doe
+```
+
+### Supported Features:
+- ✅ **Delimiters**: Comma, semicolon, tab, pipe
+- ✅ **Date Formats**: MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD, DD-MM-YYYY
+- ✅ **Currency Symbols**: $, £, €, ¥, ₹
+- ✅ **Number Formats**: 
+  - US format: 1,234.56
+  - European format: 1.234,56
+- ✅ **Negative Amounts**: -100.00 or (100.00)
+- ✅ **Optional Columns**: Status, Member Name, Balance, Card Number (automatically ignored)
+
+### Column Name Variations (case-insensitive):
+- **Date**: Date, Transaction Date, Posting Date, Trans Date
+- **Description**: Description, Merchant, Payee, Details, Memo
+- **Amount**: Amount, Transaction Amount, Value
+- **Debit**: Debit, Withdrawal, Withdrawals, Paid Out
+- **Credit**: Credit, Deposit, Deposits, Paid In
+
 ## Project Structure
 
 ```

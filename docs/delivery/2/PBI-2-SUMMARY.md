@@ -110,11 +110,13 @@
 ### Supported CSV Formats:
 - ✅ Standard format (Date, Description, Amount)
 - ✅ Debit/Credit format (Date, Merchant, Debit, Credit)
+- ✅ **Credit Card format (Status, Date, Description, Debit, Credit, Member Name)**
 - ✅ Accounting format (parentheses for negative)
 - ✅ European format (comma as decimal)
-- ✅ Various delimiters (comma, semicolon, tab)
-- ✅ Multiple date formats
+- ✅ Various delimiters (comma, semicolon, tab, pipe)
+- ✅ Multiple date formats (MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD)
 - ✅ Currency symbols and formatting
+- ✅ Optional columns automatically ignored (Status, Member Name, Balance, etc.)
 
 ---
 
