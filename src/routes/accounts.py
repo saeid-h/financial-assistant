@@ -88,6 +88,7 @@ def create_account():
     name = data.get('name')
     account_type = data.get('type')
     institution = data.get('institution')
+    initial_balance = float(data.get('initial_balance', 0.0))
     
     # Validate
     if not name:
@@ -105,7 +106,7 @@ def create_account():
     # Create account
     try:
         account_model = Account(current_app.config['DATABASE'])
-        account_id = account_model.create(name, account_type, institution)
+        account_id = account_model.create(name, account_type, institution, initial_balance)
         
         return jsonify({
             'success': True,

@@ -634,10 +634,31 @@ async function promptNewCategory(parentId, level) {
         const data = await response.json();
         
         if (data.success) {
-            alert(`✅ Category "${name}" created successfully!`);
-            // Reload categories and refresh picker
+            const newCategoryId = data.category_id;
+            
+            // Reload categories
             await loadCategoriesForPicker();
-            showLevel1Categories();
+            
+            // Find the newly created category
+            const newCategory = allCategoriesForPicker.find(c => c.id === newCategoryId);
+            
+            if (newCategory) {
+                // Select it immediately
+                if (level === 1) {
+                    selectLevel1(newCategory);
+                } else if (level === 2 && selectedCategoryPath.length >= 1) {
+                    showLevel2Categories(allCategoriesForPicker.filter(c => c.parent_id === selectedCategoryPath[0].id));
+                    selectLevel2(newCategory);
+                } else if (level === 3 && selectedCategoryPath.length >= 2) {
+                    showLevel3Categories(allCategoriesForPicker.filter(c => c.parent_id === selectedCategoryPath[1].id));
+                    selectLevel3(newCategory);
+                }
+                
+                alert(`✅ Category "${name}" created and selected!\n\nYou can now click "✓ Assign Category" to save.`);
+            } else {
+                alert(`✅ Category "${name}" created successfully!`);
+                showLevel1Categories();
+            }
         } else {
             alert('Error: ' + data.error);
         }

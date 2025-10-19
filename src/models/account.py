@@ -19,7 +19,7 @@ class Account:
         """
         self.db_path = db_path
     
-    def create(self, name: str, account_type: str, institution: str = None) -> int:
+    def create(self, name: str, account_type: str, institution: str = None, initial_balance: float = 0.0) -> int:
         """
         Create a new account.
         
@@ -27,6 +27,7 @@ class Account:
             name: Account name (e.g., "Chase Checking")
             account_type: Type of account (checking, savings, credit)
             institution: Financial institution name (optional)
+            initial_balance: Starting balance (optional, default 0.00)
         
         Returns:
             ID of created account
@@ -47,9 +48,9 @@ class Account:
         
         try:
             cursor.execute("""
-                INSERT INTO accounts (name, type, institution, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?)
-            """, (name.strip(), account_type, institution, datetime.now(), datetime.now()))
+                INSERT INTO accounts (name, type, institution, initial_balance, current_balance, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (name.strip(), account_type, institution, initial_balance, initial_balance, datetime.now(), datetime.now()))
             
             account_id = cursor.lastrowid
             conn.commit()
