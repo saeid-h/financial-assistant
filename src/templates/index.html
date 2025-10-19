@@ -1,14 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ app_name }} - Home</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}{{ app_name }} - Home{% endblock %}
+
+{% block content %}
     <div class="container">
-        <header>
+        <header style="margin-top: 0;">
             <h1>{{ app_name }}</h1>
             <p class="tagline">Track, Analyze, and Optimize Your Finances</p>
         </header>
@@ -73,6 +69,5 @@
             <p>&copy; {{ current_year }} Financial Assistant. All data stored locally.</p>
         </footer>
     </div>
-</body>
-</html>
+{% endblock %}
 
