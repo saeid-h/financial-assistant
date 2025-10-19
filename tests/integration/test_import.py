@@ -94,8 +94,8 @@ def test_upload_csv_success(client, sample_account, tmp_path):
     assert result['success'] is True
     assert result['valid_count'] == 3
     assert result['invalid_count'] == 0
-    assert result['total_credits'] == 2500.00
-    assert result['total_debits'] == 1245.50
+    assert result['total_credits'] == 1245.50  # Negative amounts (income/payments)
+    assert result['total_debits'] == 2500.00  # Positive amounts (expenses)
 
 
 def test_upload_csv_with_validation_errors(client, sample_account, tmp_path):

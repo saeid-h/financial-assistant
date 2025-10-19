@@ -227,17 +227,22 @@ class CSVParser:
             debit = self._parse_amount(row[column_map.get('debit', 'debit')]) if column_map.get('debit') else 0.0
             credit = self._parse_amount(row[column_map.get('credit', 'credit')]) if column_map.get('credit') else 0.0
             
-            # For credit card statements:
-            # - Debit column = Charges/Purchases = NEGATIVE (you spent money)
-            # - Credit column = Payments = POSITIVE (you paid off card)
-            # For bank accounts, it's the opposite:
-            # - Debit = Withdrawals = negative
-            # - Credit = Deposits = positive
+            # For CREDIT CARD statements (from user's perspective):
+            # - Debit column = Charges/Purchases = POSITIVE (you owe more)
+            # - Credit column = Payments/Returns = NEGATIVE (you owe less)
+            # 
+            # For BANK ACCOUNTS it's the same:
+            # - Debit = Withdrawals = POSITIVE (money out)
+            # - Credit = Deposits/Refunds = NEGATIVE (money in)
+            #
+            # This matches user's mental model where:
+            # - Expenses are positive (money going out or debt increasing)
+            # - Income/payments/returns are negative (money coming in or debt decreasing)
             
-            if credit != 0.0:
-                amount = abs(credit)  # Payments/deposits are positive
-            elif debit != 0.0:
-                amount = -abs(debit)  # Charges/withdrawals are negative
+            if debit != 0.0:
+                amount = abs(debit)  # Charges/withdrawals are positive
+            elif credit != 0.0:
+                amount = -abs(credit)  # Payments/returns are negative
             else:
                 return None  # No transaction amount
         

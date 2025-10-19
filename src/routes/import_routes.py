@@ -16,6 +16,7 @@ from models.account import Account
 from models.transaction import Transaction
 from services.csv_parser import CSVParser, CSVParseError
 from services.transaction_validator import TransactionValidator
+from services.file_archiver import FileArchiver
 
 import_bp = Blueprint('import', __name__, url_prefix='/import')
 
@@ -107,8 +108,10 @@ def upload_file():
                 })
         
         # Calculate summary statistics
-        total_credits = sum(txn['amount'] for txn in valid_transactions if txn['amount'] > 0)
-        total_debits = sum(abs(txn['amount']) for txn in valid_transactions if txn['amount'] < 0)
+        # total_credits = money coming in (negative amounts, like payments/income)
+        # total_debits = money going out (positive amounts, like expenses/charges)
+        total_credits = sum(abs(txn['amount']) for txn in valid_transactions if txn['amount'] < 0)
+        total_debits = sum(txn['amount'] for txn in valid_transactions if txn['amount'] > 0)
         
         # Store transactions in session for confirmation step
         # Convert dates to strings for JSON serialization
@@ -124,6 +127,7 @@ def upload_file():
         session['pending_transactions'] = transactions_for_session
         session['import_account_id'] = account_id
         session['import_filename'] = filename
+        session['import_temp_file'] = temp_path  # Store for archiving later
         
         return jsonify({
             'success': True,
@@ -145,25 +149,30 @@ def upload_file():
         })
     
     except CSVParseError as e:
+        # Clean up temp file on error
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
         return jsonify({'error': f'Failed to parse CSV: {str(e)}'}), 400
     
     except Exception as e:
-        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
-    
-    finally:
-        # Clean up temp file
+        # Clean up temp file on error
         if os.path.exists(temp_path):
             os.remove(temp_path)
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
+    
+    # Note: temp file is NOT deleted here - it's kept for archiving after confirmation
 
 
 @import_bp.route('/confirm', methods=['POST'])
 def confirm_import():
     """Confirm and save transactions to database."""
+    from flask import current_app
     
     # Get pending transactions from session
     pending_transactions = session.get('pending_transactions')
     account_id = session.get('import_account_id')
     filename = session.get('import_filename')
+    temp_file_path = session.get('import_temp_file')
     
     if not pending_transactions or not account_id:
         return jsonify({'error': 'No pending import found. Please upload a file first.'}), 400
@@ -178,10 +187,31 @@ def confirm_import():
         # Save transactions to database
         count = Transaction.bulk_create(pending_transactions)
         
+        # Archive the CSV file
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                archive_base = os.path.join(
+                    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                    'data',
+                    'archives'
+                )
+                archiver = FileArchiver(archive_base)
+                archive_result = archiver.archive_file(temp_file_path, account_id, filename)
+                
+                if not archive_result['success']:
+                    print(f"Warning: Failed to archive file: {archive_result.get('error')}")
+                
+                # Clean up temp file
+                os.remove(temp_file_path)
+            except Exception as e:
+                print(f"Warning: Error during file archiving: {str(e)}")
+                # Don't fail the import if archiving fails
+        
         # Clear session
         session.pop('pending_transactions', None)
         session.pop('import_account_id', None)
         session.pop('import_filename', None)
+        session.pop('import_temp_file', None)
         
         return jsonify({
             'success': True,

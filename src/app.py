@@ -38,10 +38,12 @@ def register_routes(app):
     # Import blueprints
     from routes.accounts import accounts_bp
     from routes.import_routes import import_bp
+    from routes.transactions import transactions_bp
     
     # Register blueprints
     app.register_blueprint(accounts_bp)
     app.register_blueprint(import_bp)
+    app.register_blueprint(transactions_bp)
     
     @app.route('/')
     def index():
