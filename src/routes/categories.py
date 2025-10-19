@@ -451,35 +451,49 @@ def get_category_stats():
 @categories_bp.route('/api/recategorize-all', methods=['POST'])
 def recategorize_all_transactions():
     """
-    Apply categorization rules to all uncategorized transactions.
-    This is useful when new rules are added or when importing old data.
+    Apply categorization rules to transactions.
+    
+    Query params:
+        mode: 'soft' (uncategorized only, default) or 'hard' (ALL transactions, override existing)
     """
     try:
         import sqlite3
+        
+        mode = request.args.get('mode', 'soft')
         
         conn = sqlite3.connect(current_app.config['DATABASE'])
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # Get all uncategorized transactions
-        cursor.execute("""
-            SELECT id, description, amount
-            FROM transactions
-            WHERE category_id IS NULL
-            ORDER BY date DESC
-        """)
+        # Get transactions based on mode
+        if mode == 'hard':
+            # HARD mode: Get ALL transactions (override existing categories)
+            cursor.execute("""
+                SELECT id, description, amount, category_id
+                FROM transactions
+                ORDER BY date DESC
+            """)
+        else:
+            # SOFT mode (default): Only uncategorized transactions
+            cursor.execute("""
+                SELECT id, description, amount, category_id
+                FROM transactions
+                WHERE category_id IS NULL
+                ORDER BY date DESC
+            """)
         
-        uncategorized = cursor.fetchall()
-        total_uncategorized = len(uncategorized)
+        transactions = cursor.fetchall()
+        total_transactions = len(transactions)
         
-        if total_uncategorized == 0:
+        if total_transactions == 0:
             conn.close()
+            message = 'All transactions are already categorized!' if mode == 'soft' else 'No transactions found!'
             return jsonify({
                 'success': True,
                 'total': 0,
                 'categorized': 0,
                 'success_rate': 100.0,
-                'message': 'All transactions are already categorized!'
+                'message': message
             })
         
         # Initialize categorization engine
@@ -487,7 +501,7 @@ def recategorize_all_transactions():
         
         categorized_count = 0
         
-        for txn in uncategorized:
+        for txn in transactions:
             # Create transaction dict
             transaction = {
                 'id': txn['id'],
@@ -513,13 +527,14 @@ def recategorize_all_transactions():
         conn.commit()
         conn.close()
         
-        success_rate = (categorized_count / total_uncategorized * 100) if total_uncategorized > 0 else 0
+        success_rate = (categorized_count / total_transactions * 100) if total_transactions > 0 else 0
         
         return jsonify({
             'success': True,
-            'total': total_uncategorized,
+            'total': total_transactions,
             'categorized': categorized_count,
-            'success_rate': round(success_rate, 1)
+            'success_rate': round(success_rate, 1),
+            'mode': mode
         })
         
     except Exception as e:

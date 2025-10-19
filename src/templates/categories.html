@@ -7,7 +7,8 @@
     <div class="page-header">
         <h1>📊 Categories Overview</h1>
         <div class="header-actions">
-            <button id="recategorize-all-btn" class="btn btn-success">🔄 Recategorize All</button>
+            <button id="recategorize-soft-btn" class="btn btn-success">🔄 Auto-Cat Uncategorized</button>
+            <button id="recategorize-hard-btn" class="btn btn-warning">⚡ Re-Cat ALL (Override)</button>
             <a href="/categories/manage" class="btn btn-primary">⚙️ Manage Categories & Rules</a>
         </div>
     </div>
@@ -222,37 +223,83 @@
 </style>
 
 <script>
-// Recategorize all uncategorized transactions
-async function recategorizeAll() {
-    const btn = document.getElementById('recategorize-all-btn');
+// Soft recategorization - only uncategorized transactions
+async function recategorizeSoft() {
+    const btn = document.getElementById('recategorize-soft-btn');
     const originalText = btn.textContent;
     
-    if (!confirm('This will apply categorization rules to all uncategorized transactions. Continue?')) {
+    if (!confirm('Apply categorization rules to UNCATEGORIZED transactions only.\n\n' +
+                 'Already categorized transactions will NOT be changed.\n\nContinue?')) {
         return;
     }
     
     btn.disabled = true;
-    btn.textContent = '🔄 Recategorizing...';
+    btn.textContent = '🔄 Processing...';
     
     try {
-        const response = await fetch('/categories/api/recategorize-all', {
+        const response = await fetch('/categories/api/recategorize-all?mode=soft', {
             method: 'POST'
         });
         const data = await response.json();
         
         if (data.success) {
-            alert(`✅ Recategorization complete!\n\n` +
-                  `Total uncategorized: ${data.total}\n` +
+            alert(`✅ Soft Recategorization Complete!\n\n` +
+                  `Uncategorized transactions: ${data.total}\n` +
                   `Successfully categorized: ${data.categorized}\n` +
-                  `Success rate: ${data.success_rate}%`);
-            
-            // Reload stats to show updated counts
+                  `Success rate: ${data.success_rate}%\n\n` +
+                  `Already categorized transactions were NOT changed.`);
             loadCategoryStats();
         } else {
             alert('Error: ' + (data.error || 'Failed to recategorize'));
         }
     } catch (error) {
-        alert('Error during recategorization: ' + error.message);
+        alert('Error: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+// Hard recategorization - ALL transactions (override existing)
+async function recategorizeHard() {
+    const btn = document.getElementById('recategorize-hard-btn');
+    const originalText = btn.textContent;
+    
+    if (!confirm('⚠️ WARNING: HARD RECATEGORIZATION\n\n' +
+                 'This will OVERRIDE ALL existing categories!\n' +
+                 'ALL transactions will be re-categorized from scratch.\n' +
+                 'Your manual categorizations will be LOST!\n\n' +
+                 'Are you ABSOLUTELY SURE?')) {
+        return;
+    }
+    
+    if (!confirm('This is your FINAL confirmation.\n\n' +
+                 'Proceeding will recategorize ALL ' + document.getElementById('categorized-count').textContent + 
+                 ' categorized transactions.\n\nClick OK to proceed or Cancel to abort.')) {
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = '⚡ Recategorizing ALL...';
+    
+    try {
+        const response = await fetch('/categories/api/recategorize-all?mode=hard', {
+            method: 'POST'
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ Hard Recategorization Complete!\n\n` +
+                  `Total transactions processed: ${data.total}\n` +
+                  `Successfully categorized: ${data.categorized}\n` +
+                  `Success rate: ${data.success_rate}%\n\n` +
+                  `ALL transactions have been re-categorized.`);
+            loadCategoryStats();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to recategorize'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
@@ -264,8 +311,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loadCategoryHierarchy();
     loadRules();
     
-    // Wire up recategorize button
-    document.getElementById('recategorize-all-btn').addEventListener('click', recategorizeAll);
+    // Wire up recategorize buttons
+    document.getElementById('recategorize-soft-btn').addEventListener('click', recategorizeSoft);
+    document.getElementById('recategorize-hard-btn').addEventListener('click', recategorizeHard);
 });
 
 async function loadCategoryStats() {

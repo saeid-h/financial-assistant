@@ -443,18 +443,27 @@ function showLevel1Categories() {
 
 function selectLevel1(category) {
     selectedCategoryPath = [category];
+    selectedCategoryId = category.id;
+    
+    // Highlight selection in level 1
+    document.querySelectorAll('#level-1-list .category-option').forEach(el => {
+        el.classList.remove('selected');
+    });
     
     // Show level 2 children
     const children = allCategoriesForPicker.filter(c => c.parent_id === category.id);
+    console.log(`Level 1 selected: ${category.name} (ID: ${category.id}), Children: ${children.length}`, children);
     
     if (children.length > 0) {
         showLevel2Categories(children);
         document.getElementById('level-2-column').style.display = 'block';
         document.getElementById('level-2-title').textContent = category.name;
     } else {
-        // No children, can select this
+        // No children, can select this directly
         document.getElementById('level-2-column').style.display = 'none';
         document.getElementById('level-3-column').style.display = 'none';
+        // Enable assign button for level-1 categories without children
+        document.getElementById('assign-category-btn').disabled = false;
     }
     
     updateBreadcrumb();
