@@ -64,16 +64,32 @@ A local web-based financial analysis application for tracking, categorizing, and
    ```
 
 6. **Run the application**
+   
+   **Option A - Using the start script (Recommended):**
    ```bash
+   ./start.sh
+   ```
+   
+   **Option B - Manual start:**
+   ```bash
+   source venv/bin/activate
    python src/app.py
    ```
 
 7. **Access the application**
    
-   Open your web browser and navigate to:
+   Once the server is running, open your web browser and navigate to:
    ```
    http://localhost:5000
    ```
+   
+   You should see the Flask server output in terminal:
+   ```
+   Server running at: http://localhost:5000
+   Press CTRL+C to stop the server
+   ```
+   
+   **Important**: The Flask application must be running for the browser to access it!
 
 ## Project Structure
 
@@ -169,6 +185,26 @@ The project uses pytest for testing:
 - **Technical Docs**: `docs/technical/`
 
 ## Troubleshooting
+
+### Cannot Access localhost:5000
+
+**Problem**: Browser shows "access denied" or "connection refused"
+
+**Solution**: The Flask application is not running. You must start it first:
+```bash
+cd /path/to/financial-assistant
+./start.sh
+```
+
+Keep the terminal window open while using the application. You should see:
+```
+============================================================
+Financial Assistant - Starting...
+============================================================
+Server running at: http://localhost:5000
+```
+
+Then access http://localhost:5000 in your browser.
 
 ### Virtual Environment Issues
 
