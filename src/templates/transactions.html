@@ -136,6 +136,19 @@
         border-color: #667eea;
     }
     
+    /* Dynamic net cash flow colors */
+    .stat-card.positive-flow {
+        border-color: #28a745;
+    }
+    
+    .stat-card.negative-flow {
+        border-color: #dc3545;
+    }
+    
+    .stat-card.zero-flow {
+        border-color: #667eea;
+    }
+    
     .stat-label {
         font-size: 0.9rem;
         color: #666;
@@ -157,6 +170,18 @@
     }
     
     .stat-card.net .stat-value {
+        color: #667eea;
+    }
+    
+    .stat-card.positive-flow .stat-value {
+        color: #28a745;
+    }
+    
+    .stat-card.negative-flow .stat-value {
+        color: #dc3545;
+    }
+    
+    .stat-card.zero-flow .stat-value {
         color: #667eea;
     }
     
@@ -203,12 +228,12 @@
     }
     
     .amount-positive {
-        color: #dc3545;
+        color: #28a745;  /* Green for income/deposits/credits */
         font-weight: bold;
     }
     
     .amount-negative {
-        color: #28a745;
+        color: #dc3545;  /* Red for expenses/withdrawals/debits */
         font-weight: bold;
     }
     
@@ -335,9 +360,25 @@
             
             if (data.success) {
                 document.getElementById('total-transactions').textContent = data.stats.total_transactions.toLocaleString();
-                document.getElementById('total-income').textContent = formatCurrency(Math.abs(data.stats.total_income));
-                document.getElementById('total-expenses').textContent = formatCurrency(data.stats.total_expenses);
+                document.getElementById('total-income').textContent = formatCurrency(data.stats.total_credits);
+                document.getElementById('total-expenses').textContent = formatCurrency(data.stats.total_debits);
                 document.getElementById('net-flow').textContent = formatCurrency(data.stats.net_cash_flow);
+                
+                // Update net cash flow card color based on value
+                const netFlowCard = document.querySelector('.stat-card.net');
+                const netFlow = data.stats.net_cash_flow;
+                
+                // Remove all color classes
+                netFlowCard.classList.remove('positive-flow', 'negative-flow', 'zero-flow');
+                
+                // Add appropriate class based on value
+                if (netFlow > 0) {
+                    netFlowCard.classList.add('positive-flow');
+                } else if (netFlow < 0) {
+                    netFlowCard.classList.add('negative-flow');
+                } else {
+                    netFlowCard.classList.add('zero-flow');
+                }
             }
         } catch (error) {
             console.error('Error loading stats:', error);

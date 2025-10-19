@@ -101,10 +101,13 @@ def get_transaction_stats():
         )
         
         # Calculate stats
+        # Following accounting standards:
+        # - Positive amounts = Credits (income, deposits, payments received)
+        # - Negative amounts = Debits (expenses, withdrawals, payments made)
         total_transactions = len(transactions)
-        total_expenses = sum(t['amount'] for t in transactions if t['amount'] > 0)
-        total_income = sum(abs(t['amount']) for t in transactions if t['amount'] < 0)
-        net_cash_flow = total_income - total_expenses
+        total_credits = sum(t['amount'] for t in transactions if t['amount'] > 0)
+        total_debits = sum(abs(t['amount']) for t in transactions if t['amount'] < 0)
+        net_cash_flow = total_credits - total_debits
         
         # Get accounts
         account_model = Account(current_app.config['DATABASE'])
@@ -112,8 +115,8 @@ def get_transaction_stats():
         
         stats = {
             'total_transactions': total_transactions,
-            'total_expenses': round(total_expenses, 2),
-            'total_income': round(total_income, 2),
+            'total_credits': round(total_credits, 2),
+            'total_debits': round(total_debits, 2),
             'net_cash_flow': round(net_cash_flow, 2),
             'accounts': accounts
         }
