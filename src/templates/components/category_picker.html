@@ -509,17 +509,41 @@ function selectLevel2(category) {
     const children = allCategoriesForPicker.filter(c => c.parent_id === category.id);
     
     if (children.length > 0) {
+        // Has children - show them
         showLevel3Categories(children);
         document.getElementById('level-3-column').style.display = 'block';
         document.getElementById('level-3-title').textContent = category.name;
     } else {
-        // No children, this is selectable
-        document.getElementById('level-3-column').style.display = 'none';
+        // No children yet - show empty column with "Add New" option
+        showLevel3AddOnly(category);
+        document.getElementById('level-3-column').style.display = 'block';
+        document.getElementById('level-3-title').textContent = category.name;
     }
     
     // Enable assign button
     document.getElementById('assign-category-btn').disabled = false;
     updateBreadcrumb();
+}
+
+function showLevel3AddOnly(parentCategory) {
+    const list = document.getElementById('level-3-list');
+    list.innerHTML = '';
+    
+    // Show only "Add New" option
+    const newDiv = document.createElement('div');
+    newDiv.className = 'category-option new-category';
+    newDiv.innerHTML = `<span>➕ Add New ${parentCategory.name} Detail...</span>`;
+    newDiv.onclick = () => promptNewCategory(parentCategory.id, 3);
+    list.appendChild(newDiv);
+    
+    // Add helpful message
+    const msgDiv = document.createElement('div');
+    msgDiv.style.padding = '20px';
+    msgDiv.style.textAlign = 'center';
+    msgDiv.style.color = '#999';
+    msgDiv.style.fontSize = '0.9rem';
+    msgDiv.innerHTML = `<p>No detail categories yet.</p><p>Click above to add one!</p>`;
+    list.appendChild(msgDiv);
 }
 
 function showLevel3Categories(categories) {

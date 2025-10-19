@@ -72,7 +72,7 @@ class Account:
         
         try:
             cursor.execute("""
-                SELECT id, name, type, institution, created_at, updated_at
+                SELECT id, name, type, institution, initial_balance, current_balance, created_at, updated_at
                 FROM accounts
                 ORDER BY created_at DESC
             """)
@@ -99,7 +99,7 @@ class Account:
         
         try:
             cursor.execute("""
-                SELECT id, name, type, institution, created_at, updated_at
+                SELECT id, name, type, institution, initial_balance, current_balance, created_at, updated_at
                 FROM accounts
                 WHERE id = ?
             """, (account_id,))

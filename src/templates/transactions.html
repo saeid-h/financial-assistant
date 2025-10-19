@@ -56,16 +56,24 @@
             <div class="stat-value" id="total-transactions">0</div>
         </div>
         <div class="stat-card income">
-            <div class="stat-label">Total Credits (Income/Deposits)</div>
+            <div class="stat-label">💰 Income & Deposits</div>
             <div class="stat-value" id="total-income">$0.00</div>
+            <small style="font-size: 0.75rem; color: #155724; display: block; margin-top: 5px;">Money IN (+)</small>
         </div>
         <div class="stat-card expense">
-            <div class="stat-label">Total Debits (Expenses/Withdrawals)</div>
+            <div class="stat-label">💸 Expenses & Withdrawals</div>
             <div class="stat-value" id="total-expenses">$0.00</div>
+            <small style="font-size: 0.75rem; color: #721c24; display: block; margin-top: 5px;">Money OUT (-)</small>
+        </div>
+        <div class="stat-card transfer" style="background: linear-gradient(135deg, #e8f0fe 0%, #f8f9fa 100%); border: 2px solid #667eea;">
+            <div class="stat-label">💹 Transfers</div>
+            <div class="stat-value" id="total-transfers">$0.00</div>
+            <small style="font-size: 0.75rem; color: #667eea; display: block; margin-top: 5px;">Between accounts (neutral)</small>
         </div>
         <div class="stat-card net">
-            <div class="stat-label">Net Cash Flow</div>
+            <div class="stat-label">📊 Net Cash Flow</div>
             <div class="stat-value" id="net-flow">$0.00</div>
+            <small style="font-size: 0.75rem; color: #666; display: block; margin-top: 5px;">Income - Expenses</small>
         </div>
     </div>
     
@@ -465,6 +473,7 @@
                 document.getElementById('total-transactions').textContent = data.stats.total_transactions.toLocaleString();
                 document.getElementById('total-income').textContent = formatCurrency(data.stats.total_credits);
                 document.getElementById('total-expenses').textContent = formatCurrency(data.stats.total_debits);
+                document.getElementById('total-transfers').textContent = formatCurrency(data.stats.total_transfers);
                 document.getElementById('net-flow').textContent = formatCurrency(data.stats.net_cash_flow);
                 
                 // Update net cash flow card color based on value

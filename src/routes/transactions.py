@@ -148,10 +148,29 @@ def get_transaction_stats():
         # Following accounting standards:
         # - Positive amounts = Credits (income, deposits, payments received)
         # - Negative amounts = Debits (expenses, withdrawals, payments made)
+        # - Transfers = Neutral (between accounts, not affecting net worth)
+        
+        import sqlite3
+        
+        # Identify transfer transactions (category type = 'transfer')
+        conn = sqlite3.connect(current_app.config['DATABASE'])
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Get transfer category IDs
+        cursor.execute("SELECT id FROM categories WHERE type = 'transfer'")
+        transfer_cat_ids = [row['id'] for row in cursor.fetchall()]
+        conn.close()
+        
+        # Separate transfers from income/expenses
+        transfers = [t for t in transactions if t.get('category_id') in transfer_cat_ids]
+        income_expenses = [t for t in transactions if t.get('category_id') not in transfer_cat_ids]
+        
         total_transactions = len(transactions)
-        total_credits = sum(t['amount'] for t in transactions if t['amount'] > 0)
-        total_debits = sum(abs(t['amount']) for t in transactions if t['amount'] < 0)
-        net_cash_flow = total_credits - total_debits
+        total_transfers = sum(abs(t['amount']) for t in transfers)  # Absolute value for transfers
+        total_credits = sum(t['amount'] for t in income_expenses if t['amount'] > 0)
+        total_debits = sum(abs(t['amount']) for t in income_expenses if t['amount'] < 0)
+        net_cash_flow = total_credits - total_debits  # Excludes transfers!
         
         # Get accounts
         account_model = Account(current_app.config['DATABASE'])
@@ -161,6 +180,7 @@ def get_transaction_stats():
             'total_transactions': total_transactions,
             'total_credits': round(total_credits, 2),
             'total_debits': round(total_debits, 2),
+            'total_transfers': round(total_transfers, 2),
             'net_cash_flow': round(net_cash_flow, 2),
             'accounts': accounts
         }
