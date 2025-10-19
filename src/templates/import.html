@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+
+{% block title %}Import Transactions{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Import Transactions</h1>
+    
+    <!-- Upload Form -->
+    <div id="upload-section" class="card">
+        <h2>Upload CSV File</h2>
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="account_id">Select Account:</label>
+                <select id="account_id" name="account_id" required>
+                    <option value="">-- Choose Account --</option>
+                    {% for account in accounts %}
+                    <option value="{{ account.id }}">{{ account.name }} ({{ account.type }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="file">CSV File:</label>
+                <input type="file" id="file" name="file" accept=".csv" required>
+                <small>Supported formats: CSV with Date, Description, Amount columns</small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Upload and Preview</button>
+        </form>
+    </div>
+    
+    <!-- Loading Indicator -->
+    <div id="loading" style="display: none;">
+        <p>Parsing CSV file...</p>
+    </div>
+    
+    <!-- Error Display -->
+    <div id="error-section" class="alert alert-error" style="display: none;"></div>
+    
+    <!-- Preview Section -->
+    <div id="preview-section" style="display: none;">
+        <div class="card">
+            <h2>Transaction Preview</h2>
+            
+            <div id="import-summary" class="summary-stats"></div>
+            
+            <div id="invalid-transactions-section" style="display: none;">
+                <h3>⚠️ Invalid Transactions</h3>
+                <div id="invalid-transactions-list"></div>
+            </div>
+            
+            <h3>Valid Transactions</h3>
+            <div class="table-container">
+                <table id="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactions-tbody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="confirm-btn" class="btn btn-success">Confirm Import</button>
+                <button id="cancel-btn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success Section -->
+    <div id="success-section" class="alert alert-success" style="display: none;"></div>
+</div>
+
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .form-group small {
+        color: #666;
+        font-size: 12px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-success {
+        background: #10b981;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+    
+    .btn:hover {
+        opacity: 0.9;
+    }
+    
+    .alert {
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    
+    .alert-error {
+        background: #fee;
+        color: #c00;
+        border: 1px solid #fcc;
+    }
+    
+    .alert-success {
+        background: #efe;
+        color: #060;
+        border: 1px solid #cfc;
+    }
+    
+    .summary-stats {
+        background: #f9fafb;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    
+    .summary-stats .stat {
+        display: inline-block;
+        margin-right: 30px;
+        margin-bottom: 10px;
+    }
+    
+    .summary-stats .stat-label {
+        font-weight: 500;
+        color: #666;
+    }
+    
+    .summary-stats .stat-value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .stat-value.positive {
+        color: #10b981;
+    }
+    
+    .stat-value.negative {
+        color: #ef4444;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    thead {
+        position: sticky;
+        top: 0;
+        background: white;
+        box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+    }
+    
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    th {
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    tr:hover {
+        background: #f9fafb;
+    }
+    
+    .action-buttons {
+        margin-top: 20px;
+        text-align: right;
+    }
+    
+    #loading {
+        text-align: center;
+        padding: 40px;
+        font-size: 18px;
+        color: #667eea;
+    }
+    
+    .error-item {
+        background: #fee;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+</style>
+
+<script>
+    const uploadForm = document.getElementById('upload-form');
+    const uploadSection = document.getElementById('upload-section');
+    const loadingSection = document.getElementById('loading');
+    const errorSection = document.getElementById('error-section');
+    const previewSection = document.getElementById('preview-section');
+    const successSection = document.getElementById('success-section');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    
+    // Handle file upload
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Reset display
+        errorSection.style.display = 'none';
+        previewSection.style.display = 'none';
+        successSection.style.display = 'none';
+        loadingSection.style.display = 'block';
+        
+        const formData = new FormData(uploadForm);
+        
+        try {
+            const response = await fetch('/import/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            loadingSection.style.display = 'none';
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Upload failed');
+            }
+            
+            // Show preview
+            displayPreview(data);
+            
+        } catch (error) {
+            loadingSection.style.display = 'none';
+            errorSection.textContent = error.message;
+            errorSection.style.display = 'block';
+        }
+    });
+    
+    // Display transaction preview
+    function displayPreview(data) {
+        // Summary stats
+        const summary = document.getElementById('import-summary');
+        summary.innerHTML = `
+            <div class="stat">
+                <div class="stat-label">Account</div>
+                <div class="stat-value">${data.account_name}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total Transactions</div>
+                <div class="stat-value">${data.valid_count} valid, ${data.invalid_count} invalid</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total Credits</div>
+                <div class="stat-value positive">$${data.total_credits.toFixed(2)}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Total Debits</div>
+                <div class="stat-value negative">$${data.total_debits.toFixed(2)}</div>
+            </div>
+        `;
+        
+        // Invalid transactions
+        if (data.invalid_count > 0) {
+            const invalidSection = document.getElementById('invalid-transactions-section');
+            const invalidList = document.getElementById('invalid-transactions-list');
+            
+            invalidList.innerHTML = data.invalid_transactions.map(item => {
+                const errors = item.errors.map(err => `${err.field}: ${err.message}`).join(', ');
+                return `<div class="error-item">
+                    <strong>${item.transaction.description}</strong> - ${errors}
+                </div>`;
+            }).join('');
+            
+            invalidSection.style.display = 'block';
+        }
+        
+        // Transaction table
+        const tbody = document.getElementById('transactions-tbody');
+        tbody.innerHTML = data.transactions.map(txn => `
+            <tr>
+                <td>${txn.date}</td>
+                <td>${txn.description}</td>
+                <td style="color: ${txn.amount >= 0 ? '#10b981' : '#ef4444'}">
+                    $${txn.amount.toFixed(2)}
+                </td>
+            </tr>
+        `).join('');
+        
+        previewSection.style.display = 'block';
+    }
+    
+    // Confirm import
+    confirmBtn.addEventListener('click', async () => {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Importing...';
+        
+        try {
+            const response = await fetch('/import/confirm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Import failed');
+            }
+            
+            // Show success
+            successSection.innerHTML = `
+                <strong>Success!</strong> ${data.message}
+                <br><br>
+                <a href="/accounts" class="btn btn-primary">View Accounts</a>
+            `;
+            successSection.style.display = 'block';
+            
+            // Hide preview
+            previewSection.style.display = 'none';
+            uploadSection.style.display = 'none';
+            
+        } catch (error) {
+            errorSection.textContent = error.message;
+            errorSection.style.display = 'block';
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Confirm Import';
+        }
+    });
+    
+    // Cancel import
+    cancelBtn.addEventListener('click', () => {
+        previewSection.style.display = 'none';
+        uploadForm.reset();
+    });
+</script>
+{% endblock %}
+
