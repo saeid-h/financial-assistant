@@ -20,7 +20,7 @@ This backlog contains all Product Backlog Items (PBIs) for the Financial Assista
 | 6 | User | As a user, I want to search and filter transactions so that I can quickly find specific purchases or patterns | Done | [Details](./6/prd.md) - ✅ Real-time search, amount filters, type filters, advanced filter panel, notes/tags schema ready (UI deferred) |
 | 7 | User | As a user, I want to set budgets for categories so that I can control my spending | Done | [Details](./7/prd.md) - ✅ Monthly budgets, progress tracking, color-coded alerts, create/edit/delete, budget dashboard, alert thresholds |
 | 8 | User | As a user, I want to track savings goals so that I can work toward financial objectives | Proposed | [Details](./8/prd.md) - Define goals with targets and dates, track progress, allocate income to goals, achievement predictions, visual indicators |
-| 9 | User | As a user, I want the system to identify recurring transactions so that I can manage subscriptions and bills | Proposed | [Details](./9/prd.md) - Auto-detect recurring transactions, manage recurring list, alert on missing payments, alert on amount changes, auto-categorize recurring |
+| 9 | User | As a user, I want the system to identify recurring transactions so that I can manage subscriptions and bills | Agreed | [Details](./9/prd.md) - Auto-detect recurring transactions (3+ occurrences), manage recurring list, alert on missing payments (3+ days), alert on amount changes (>10%), auto-categorize recurring, 5 frequency types supported |
 | 10 | User | As a user, I want a financial health dashboard so that I can see my overall financial status at a glance | Proposed | [Details](./10/prd.md) - Display net income, savings rate, budget status, top categories, month-over-month comparison, goal progress, upcoming bills, financial health score |
 | 11 | User | As a user, I want to see cash flow predictions and receive alerts so that I can plan ahead and avoid financial issues | Proposed | [Details](./11/prd.md) - Visual cash flow calendar, predict future cash flow, configurable alerts (budget/unusual/low balance/goals), notification system |
 
@@ -42,6 +42,8 @@ This backlog contains all Product Backlog Items (PBIs) for the Financial Assista
 | 2025-10-20 00:15:00 | 7 | Status Change | PBI 7 moved from Proposed to Agreed - Ready to implement budget management system, 5 tasks defined | Saeed |
 | 2025-10-20 00:28:00 | 6 | Status Change | PBI 6 moved from Agreed to Done - Core search/filter complete (real-time search, advanced filters, notes/tags schema), 3 tasks done, 3 deferred for later | Saeed |
 | 2025-10-20 00:33:00 | 7 | Status Change | PBI 7 moved from Agreed to Done - Budget management system complete (create/edit/delete budgets, progress tracking, alert system), 4 tasks done, charts deferred | Saeed |
+| 2025-10-20 03:30:00 | ALL | Milestone | v1.0-draft tag created - Phase 1 & 2 complete (7 PBIs done), starting Phase 3 implementation | Saeed |
+| 2025-10-20 03:31:00 | 9 | Status Change | PBI 9 moved from Proposed to Agreed - Ready to implement recurring transaction detection, 8 tasks defined | Saeed |
 
 ## Phase Breakdown
 
