@@ -290,9 +290,36 @@ function openCategoryPicker(transactionId, buttonElement) {
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
             
-            // Position below the button (adjusted for smaller size, more to the left)
-            content.style.top = (rect.bottom + scrollTop + 10) + 'px';
-            content.style.left = Math.max(20, (rect.left + scrollLeft - 280)) + 'px';
+            const pickerHeight = 420; // max-height of picker
+            const pickerWidth = 650;
+            const gap = 10;
+            
+            // Calculate position below button
+            let top = rect.bottom + scrollTop + gap;
+            let left = Math.max(20, rect.left + scrollLeft - 280);
+            
+            // Check if picker would go off bottom of viewport
+            const viewportHeight = window.innerHeight;
+            const spaceBelow = viewportHeight - rect.bottom;
+            
+            if (spaceBelow < pickerHeight + 20) {
+                // Not enough space below, position above the button instead
+                top = rect.top + scrollTop - pickerHeight - gap;
+                
+                // If also not enough space above, center in viewport
+                if (rect.top < pickerHeight + 20) {
+                    top = scrollTop + (viewportHeight - pickerHeight) / 2;
+                }
+            }
+            
+            // Ensure doesn't go off right edge
+            if (left + pickerWidth > window.innerWidth - 20) {
+                left = window.innerWidth - pickerWidth - 20;
+            }
+            
+            content.style.top = top + 'px';
+            content.style.left = left + 'px';
+            content.style.transform = 'none';
         } else {
             // Center on screen if no button reference
             content.style.top = '50%';
