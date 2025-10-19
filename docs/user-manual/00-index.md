@@ -48,10 +48,13 @@ Financial Assistant is a personal financial tracking and analysis tool that help
 
 ### Analysis & Planning
 - **[6. Reports & Charts](./06-reports.md)**
+  - 5 report types: Standard charts, Month comparison, Merchant analysis, Net worth, Custom builder
   - Visual spending analysis
-  - Income vs expenses charts
-  - Category breakdown
-  - Data export to CSV
+  - Month-over-month comparison
+  - Merchant spending patterns
+  - Net worth trajectory tracking
+  - Customizable report builder
+  - CSV and PDF export
 
 - **[7. Budget Management](./07-budgets.md)**
   - Creating monthly budgets

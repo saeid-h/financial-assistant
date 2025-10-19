@@ -65,14 +65,16 @@ python src/seed_rules.py
 - Advanced filter panel
 - Color-coded transactions (Green=Income, Red=Expense, Purple=Transfer)
 
-### 📊 **Visual Reports**
-- 4 interactive Chart.js visualizations
-- Monthly Income vs Expenses (Line chart)
-- Spending by Category (Pie chart)
-- Monthly Category Trends (Stacked bar)
-- Top 10 Categories (Horizontal bar)
+### 📊 **Visual Reports & Analytics**
+- **5 Report Types**: Standard charts, month comparison, merchant analysis, net worth, custom builder
+- **Standard Charts**: 4 interactive Chart.js visualizations (income/expenses, category pie, trends, top categories)
+- **Month Comparison**: Side-by-side analysis with variance tracking
+- **Merchant Analysis**: Top 50 merchants, spending patterns, smart grouping
+- **Net Worth Tracker**: Wealth trajectory over time with growth metrics
+- **Custom Report Builder**: Flexible metrics, groupings, and visualizations
 - Date range filters (8 presets + custom)
-- CSV export functionality
+- CSV export on all reports
+- PDF export capability (reportlab installed)
 
 ### 💰 **Budget Management**
 - Create monthly budgets by category
@@ -87,6 +89,23 @@ python src/seed_rules.py
 - Transfers excluded from expense calculations
 - Purple color coding for visual distinction
 - Accurate net worth tracking
+
+### 🔄 **Recurring Transaction Detection** (Phase 3)
+- Auto-detect subscriptions and bills (Levenshtein algorithm)
+- 5 frequency types: weekly, bi-weekly, monthly, quarterly, annual
+- 85% similarity threshold with fuzzy matching
+- Alert on missing payments (3+ days overdue)
+- Alert on amount changes (>10% variance)
+- Bulk scanner CLI tool
+- Manage recurring items (pause, resume, delete)
+
+### 📊 **Financial Health Dashboard** (Phase 3)
+- Comprehensive health score (0-100 algorithm)
+- 30-day income, expenses, and savings rate
+- Total net worth across all accounts
+- Top 5 spending categories
+- Quick links to all features
+- One-click financial overview
 
 ### 🔐 **Privacy & Security**
 - **100% local storage** - No cloud, no external servers
@@ -144,27 +163,39 @@ financial-assistant/
 │   ├── app.py                   # Flask application entry point
 │   ├── init_db.py               # Database initialization
 │   ├── seed_rules.py            # Categorization rules seeder
+│   ├── reset_transactions.py    # Utility to clear transactions
+│   ├── scan_recurring.py        # CLI tool for recurring detection
+│   ├── migrate_*.py             # Database migration scripts
 │   ├── models/                  # Database models
 │   │   ├── account.py          # Account CRUD operations
 │   │   ├── transaction.py      # Transaction model
 │   │   ├── category.py         # Category management
-│   │   └── budget.py           # Budget model
+│   │   ├── budget.py           # Budget model
+│   │   └── goal.py             # Savings goals model
 │   ├── services/                # Business logic
 │   │   ├── csv_parser.py       # CSV parsing (100+ formats)
 │   │   ├── categorization_engine.py  # Auto-categorization
 │   │   ├── duplicate_detector.py     # Duplicate detection
 │   │   ├── file_archiver.py    # CSV archiving
 │   │   ├── report_service.py   # Report data aggregation
-│   │   └── budget_service.py   # Budget calculations
+│   │   ├── budget_service.py   # Budget calculations
+│   │   ├── recurring_detector.py     # Pattern detection (Levenshtein)
+│   │   └── recurring_manager.py      # Recurring CRUD & alerts
 │   ├── routes/                  # Flask blueprints
 │   │   ├── accounts.py         # Account API
 │   │   ├── import_routes.py    # Import functionality
 │   │   ├── transactions.py     # Transaction API
 │   │   ├── categories.py       # Category API
-│   │   ├── reports.py          # Reports API
+│   │   ├── reports.py          # Reports API (5 report types)
 │   │   ├── budgets.py          # Budget API
+│   │   ├── recurring.py        # Recurring transactions API
+│   │   ├── dashboard.py        # Financial health dashboard
 │   │   └── admin.py            # Admin functions
 │   ├── templates/               # Jinja2 HTML templates
+│   │   ├── reports*.html       # 5 report templates
+│   │   ├── dashboard.html      # Financial health dashboard
+│   │   ├── recurring.html      # Recurring transactions page
+│   │   └── ...                 # Other templates
 │   └── static/css/             # Stylesheets
 ├── data/                         # Data storage (gitignored)
 │   ├── financial_assistant.db  # SQLite database
@@ -545,6 +576,43 @@ A: Copy `data/financial_assistant.db` and `data/archives/` to a safe location. S
 
 **Q: Is it safe for sensitive financial data?**  
 A: Yes! All data is local-only. No internet connection required. See [Privacy Policy](PRIVACY.md).
+
+---
+
+## 📋 Changelog
+
+### v2.0 (October 2025) - Enhanced Reports & Analysis
+- ✅ **4 New Report Types**: Month Comparison, Merchant Analysis, Net Worth Tracker, Custom Report Builder
+- ✅ **Month Comparison**: Side-by-side variance analysis with color coding
+- ✅ **Merchant Analysis**: Top 50 merchants with smart grouping and real-time search
+- ✅ **Net Worth Tracker**: Wealth trajectory with growth metrics
+- ✅ **Custom Report Builder**: Flexible metrics, groupings, and visualizations
+- ✅ **CSV Export**: Available on all reports
+- ✅ **Reports Navigation Hub**: Organized access to all 5 report types
+- ✅ **File Organization**: Moved utility scripts to `src/` directory
+- ✅ **PDF Export Prep**: Installed reportlab dependency
+
+### v1.0 (October 2025) - Phase 3 Complete
+- ✅ **Financial Health Dashboard**: Health score, 30-day metrics, top categories
+- ✅ **Recurring Transactions**: Auto-detection with Levenshtein algorithm, 5 frequencies
+- ✅ **Savings Goals**: Database schema and model (UI deferred)
+- ✅ **Cash Flow Alerts**: Integrated with recurring patterns
+- ✅ **Phase 3**: 11 PBIs complete, 100% feature delivery
+
+### v0.9 (October 2025) - Phase 2 Complete
+- ✅ **Budget Management**: Monthly budgets, progress tracking, alerts
+- ✅ **Enhanced Search**: Real-time search, amount filters, transaction type filters
+- ✅ **Notes & Tags**: Database schema (UI deferred)
+- ✅ **Phase 2**: 7 PBIs complete
+
+### v0.8 (October 2025) - Phase 1 Complete
+- ✅ **CSV Import**: Flexible parser supporting 100+ formats from major banks
+- ✅ **Auto-Categorization**: 30 categories, 65+ rules, pattern matching engine
+- ✅ **Visual Reports**: 4 Chart.js visualizations with date filters
+- ✅ **Account Management**: Full CRUD with balance tracking
+- ✅ **Transaction Views**: Filter, search, statistics dashboard
+- ✅ **Duplicate Detection**: Hash-based checking with configurable thresholds
+- ✅ **File Archiving**: Automatic CSV archiving to `data/archives/YYYY/MM/`
 
 ---
 

@@ -264,6 +264,37 @@ Updated 2 accounts
 
 ---
 
+## Utility Scripts
+
+All utility scripts are located in the `src/` directory for better organization:
+
+**Database Management:**
+- `src/reset_transactions.py` - Clear transactions (alternative to web UI)
+- `src/init_db.py` - Initialize database from scratch
+
+**Pattern Detection:**
+- `src/scan_recurring.py` - Scan for recurring patterns (CLI tool)
+
+**Categorization:**
+- `src/seed_rules.py` - Seed default categorization rules
+
+**Migrations:**
+- `src/migrate_*.py` files - Database schema updates
+
+**Usage:**
+```bash
+# Scan for recurring transactions
+./src/scan_recurring.py
+
+# Reset database (alternative to Admin UI)
+python src/reset_transactions.py
+
+# Reseed rules
+python src/seed_rules.py
+```
+
+---
+
 ## Seeding Data
 
 ### Seeding Categorization Rules
