@@ -191,12 +191,20 @@ def confirm_import():
             print(f"Warning: Expected {expected_count} valid transactions, got {len(valid_transactions)}")
         
         # Check for duplicates
+        print(f"\n=== DUPLICATE DETECTION START ===")
+        print(f"Checking {len(valid_transactions)} transactions for duplicates...")
         detector = DuplicateDetector(current_app.config['DATABASE'])
         non_duplicate_transactions = []
         duplicate_count = 0
         
-        for txn in valid_transactions:
+        for i, txn in enumerate(valid_transactions):
             duplicate_check = detector.check_duplicate(txn)
+            
+            if i < 3:  # Debug first 3 transactions
+                print(f"\nTransaction {i+1}: {txn['date']} - {txn['description'][:30]} - ${txn['amount']}")
+                print(f"  is_duplicate: {duplicate_check['is_duplicate']}, confidence: {duplicate_check['confidence']:.2f}")
+                if duplicate_check['matches']:
+                    print(f"  Found {len(duplicate_check['matches'])} potential matches")
             
             # Only import if not a duplicate (is_duplicate = False means unique)
             if not duplicate_check['is_duplicate']:
@@ -204,7 +212,13 @@ def confirm_import():
             else:
                 duplicate_count += 1
                 confidence = duplicate_check['confidence']
-                print(f"Skipping duplicate (confidence: {confidence:.0%}): {txn['date']} - {txn['description']} - ${txn['amount']}")
+                print(f"✗ DUPLICATE (confidence: {confidence:.0%}): {txn['date']} - {txn['description'][:50]} - ${txn['amount']}")
+        
+        print(f"\n=== DUPLICATE DETECTION COMPLETE ===")
+        print(f"Total checked: {len(valid_transactions)}")
+        print(f"New (unique): {len(non_duplicate_transactions)}")
+        print(f"Duplicates: {duplicate_count}")
+        print(f"=====================================\n")
         
         # Save non-duplicate transactions to database
         count = Transaction.bulk_create(non_duplicate_transactions) if non_duplicate_transactions else 0
