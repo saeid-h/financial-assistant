@@ -1,0 +1,709 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Categories - Financial Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>📊 Manage Categories & Rules</h1>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="openAddCategoryModal()">
+                ➕ Add New Category
+            </button>
+            <button class="btn btn-primary" onclick="openAddRuleModal()">
+                🔍 Add New Rule
+            </button>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('categories')">Categories</button>
+        <button class="tab-btn" onclick="showTab('rules')">Categorization Rules</button>
+    </div>
+    
+    <!-- Categories Tab -->
+    <div id="categories-tab" class="tab-content active">
+        <div class="category-sections">
+            <div class="card">
+                <h2>💰 Income Categories</h2>
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Level</th>
+                            <th>Parent</th>
+                            <th>Transactions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="income-categories-tbody"></tbody>
+                </table>
+            </div>
+            
+            <div class="card">
+                <h2>💸 Expense Categories</h2>
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Level</th>
+                            <th>Parent</th>
+                            <th>Transactions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expense-categories-tbody"></tbody>
+                </table>
+            </div>
+            
+            <div class="card">
+                <h2>💹 Savings & Investments</h2>
+                <table class="category-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Level</th>
+                            <th>Parent</th>
+                            <th>Transactions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transfer-categories-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rules Tab -->
+    <div id="rules-tab" class="tab-content">
+        <div class="card">
+            <h2>All Categorization Rules</h2>
+            <p>These patterns automatically assign categories to transactions</p>
+            <table class="rules-table">
+                <thead>
+                    <tr>
+                        <th>Pattern</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th>Priority</th>
+                        <th>Matches</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="all-rules-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div id="add-category-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Add New Category</h2>
+            <button class="close-btn" onclick="closeAddCategoryModal()">&times;</button>
+        </div>
+        
+        <form id="add-category-form" onsubmit="handleAddCategory(event)">
+            <div class="form-group">
+                <label for="new-cat-name">Category Name *</label>
+                <input type="text" id="new-cat-name" required placeholder="e.g., Coffee Shops">
+            </div>
+            
+            <div class="form-group">
+                <label for="new-cat-type">Category Type *</label>
+                <select id="new-cat-type" required onchange="updateParentOptions()">
+                    <option value="">-- Select Type --</option>
+                    <option value="income">💰 Income</option>
+                    <option value="expense">💸 Expense</option>
+                    <option value="transfer">💹 Savings & Investments</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="new-cat-level">Category Level *</label>
+                <select id="new-cat-level" required onchange="updateParentOptions()">
+                    <option value="">-- Select Level --</option>
+                    <option value="1">Level 1 (Top Level)</option>
+                    <option value="2">Level 2 (Subcategory)</option>
+                    <option value="3">Level 3 (Detail)</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="parent-group" style="display: none;">
+                <label for="new-cat-parent">Parent Category *</label>
+                <select id="new-cat-parent">
+                    <option value="">-- Select Parent --</option>
+                </select>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeAddCategoryModal()">Cancel</button>
+                <button type="submit" class="btn btn-success">Create Category</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Rule Modal -->
+<div id="add-rule-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Add Categorization Rule</h2>
+            <button class="close-btn" onclick="closeAddRuleModal()">&times;</button>
+        </div>
+        
+        <form id="add-rule-form" onsubmit="handleAddRule(event)">
+            <div class="form-group">
+                <label for="new-rule-pattern">Pattern *</label>
+                <input type="text" id="new-rule-pattern" required 
+                       placeholder="e.g., STARBUCKS or COSTCO|WALMART">
+                <small>Use | for OR (e.g., SHELL|CHEVRON matches either)</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="new-rule-category">Assign to Category *</label>
+                <select id="new-rule-category" required>
+                    <option value="">-- Select Category --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="new-rule-priority">Priority (0-100)</label>
+                <input type="number" id="new-rule-priority" value="50" min="0" max="100">
+                <small>Higher = checked first. User rules default to 100.</small>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeAddRuleModal()">Cancel</button>
+                <button type="submit" class="btn btn-success">Create Rule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: #667eea;
+}
+
+.tab-btn.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+.category-table, .rules-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.category-table thead,
+.rules-table thead {
+    background: #f8f9fa;
+}
+
+.category-table th,
+.category-table td,
+.rules-table th,
+.rules-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.category-table tbody tr:hover,
+.rules-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.level-badge {
+    background: #667eea;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.count-badge {
+    background: #27ae60;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.pattern-badge {
+    font-family: monospace;
+    background: #e8f0fe;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.priority-badge {
+    background: #ffd700;
+    color: #333;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.85em;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+</style>
+
+<script>
+let allCategories = [];
+let allRules = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadAllData();
+});
+
+async function loadAllData() {
+    await loadCategories();
+    await loadRules();
+}
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/categories/api/all');
+        const data = await response.json();
+        
+        if (data.success) {
+            allCategories = data.categories;
+            displayCategories();
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+function displayCategories() {
+    const incomeCategories = allCategories.filter(c => c.type === 'income');
+    const expenseCategories = allCategories.filter(c => c.type === 'expense');
+    const transferCategories = allCategories.filter(c => c.type === 'transfer');
+    
+    displayCategoryTable('income-categories-tbody', incomeCategories);
+    displayCategoryTable('expense-categories-tbody', expenseCategories);
+    displayCategoryTable('transfer-categories-tbody', transferCategories);
+}
+
+function displayCategoryTable(tbodyId, categories) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = '';
+    
+    categories.forEach(cat => {
+        const tr = document.createElement('tr');
+        const indent = '&nbsp;'.repeat((cat.level - 1) * 3);
+        
+        tr.innerHTML = `
+            <td>${indent}${cat.name}</td>
+            <td><span class="level-badge">Level ${cat.level}</span></td>
+            <td>${cat.parent_name || '-'}</td>
+            <td><span class="count-badge">${cat.transaction_count || 0}</span></td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteCategory(${cat.id}, '${cat.name}')">
+                    Delete
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    if (categories.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td colspan="5" style="text-align: center; color: #999;">No categories</td>';
+        tbody.appendChild(tr);
+    }
+}
+
+async function loadRules() {
+    try {
+        const response = await fetch('/categories/api/rules');
+        const data = await response.json();
+        
+        if (data.success) {
+            allRules = data.rules;
+            displayRules();
+        }
+    } catch (error) {
+        console.error('Error loading rules:', error);
+    }
+}
+
+function displayRules() {
+    const tbody = document.getElementById('all-rules-tbody');
+    tbody.innerHTML = '';
+    
+    allRules.forEach(rule => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><span class="pattern-badge">${rule.pattern}</span></td>
+            <td>${rule.category_name}</td>
+            <td>${rule.category_type}</td>
+            <td><span class="priority-badge">${rule.priority}</span></td>
+            <td><span class="count-badge">${rule.match_count || 0}</span></td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteRule(${rule.id}, '${rule.pattern}')">
+                    Delete
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function showTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.add('active');
+    event.target.classList.add('active');
+}
+
+// Add Category Modal
+function openAddCategoryModal() {
+    document.getElementById('add-category-modal').classList.add('active');
+    document.getElementById('add-category-form').reset();
+}
+
+function closeAddCategoryModal() {
+    document.getElementById('add-category-modal').classList.remove('active');
+}
+
+function updateParentOptions() {
+    const type = document.getElementById('new-cat-type').value;
+    const level = parseInt(document.getElementById('new-cat-level').value);
+    const parentGroup = document.getElementById('parent-group');
+    const parentSelect = document.getElementById('new-cat-parent');
+    
+    // Only show parent dropdown for levels 2 and 3
+    if (level > 1 && type) {
+        parentGroup.style.display = 'block';
+        
+        // Filter categories by type and appropriate level
+        const parentLevel = level - 1;
+        const eligibleParents = allCategories.filter(c => 
+            c.type === type && c.level === parentLevel
+        );
+        
+        parentSelect.innerHTML = '<option value="">-- Select Parent --</option>';
+        eligibleParents.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            parentSelect.appendChild(option);
+        });
+    } else {
+        parentGroup.style.display = 'none';
+    }
+}
+
+async function handleAddCategory(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('new-cat-name').value.trim();
+    const type = document.getElementById('new-cat-type').value;
+    const level = parseInt(document.getElementById('new-cat-level').value);
+    const parentId = document.getElementById('new-cat-parent').value || null;
+    
+    try {
+        const response = await fetch('/categories/api/create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                name: name,
+                type: type,
+                level: level,
+                parent_id: parentId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ Category "${name}" created successfully!`);
+            closeAddCategoryModal();
+            await loadCategories();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error creating category: ' + error.message);
+    }
+}
+
+// Add Rule Modal
+function openAddRuleModal() {
+    document.getElementById('add-rule-modal').classList.add('active');
+    document.getElementById('add-rule-form').reset();
+    populateRuleCategoryDropdown();
+}
+
+function closeAddRuleModal() {
+    document.getElementById('add-rule-modal').classList.remove('active');
+}
+
+function populateRuleCategoryDropdown() {
+    const select = document.getElementById('new-rule-category');
+    select.innerHTML = '<option value="">-- Select Category --</option>';
+    
+    // Group by type
+    ['income', 'expense', 'transfer'].forEach(type => {
+        const typeLabel = type === 'income' ? '💰 Income' : 
+                         type === 'expense' ? '💸 Expenses' : '💹 Savings';
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = typeLabel;
+        
+        const typeCats = allCategories.filter(c => c.type === type);
+        typeCats.forEach(cat => {
+            const indent = '  '.repeat(cat.level - 1);
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = indent + cat.name;
+            optgroup.appendChild(option);
+        });
+        
+        if (typeCats.length > 0) {
+            select.appendChild(optgroup);
+        }
+    });
+}
+
+async function handleAddRule(event) {
+    event.preventDefault();
+    
+    const pattern = document.getElementById('new-rule-pattern').value.trim().toUpperCase();
+    const categoryId = parseInt(document.getElementById('new-rule-category').value);
+    const priority = parseInt(document.getElementById('new-rule-priority').value);
+    
+    try {
+        const response = await fetch('/categories/api/rules/create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                pattern: pattern,
+                category_id: categoryId,
+                priority: priority
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ Rule "${pattern}" created successfully!`);
+            closeAddRuleModal();
+            await loadRules();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error creating rule: ' + error.message);
+    }
+}
+
+async function deleteCategory(categoryId, categoryName) {
+    if (!confirm(`Delete category "${categoryName}"?\n\nThis will remove the category from all transactions.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/categories/api/${categoryId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Category deleted');
+            await loadCategories();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error deleting category: ' + error.message);
+    }
+}
+
+async function deleteRule(ruleId, pattern) {
+    if (!confirm(`Delete rule "${pattern}"?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/categories/api/rules/${ruleId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Rule deleted');
+            await loadRules();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error deleting rule: ' + error.message);
+    }
+}
+</script>
+{% endblock %}
+

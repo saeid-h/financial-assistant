@@ -4,7 +4,10 @@
 
 {% block content %}
 <div class="container">
-    <h1>📊 Categories</h1>
+    <div class="page-header">
+        <h1>📊 Categories Overview</h1>
+        <a href="/categories/manage" class="btn btn-primary">⚙️ Manage Categories & Rules</a>
+    </div>
     
     <!-- Category Statistics -->
     <div class="stats-grid">
@@ -66,6 +69,17 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    margin: 0;
 }
 
 .stats-grid {

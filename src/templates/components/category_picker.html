@@ -31,8 +31,11 @@
             <!-- Actions -->
             <div class="picker-actions">
                 <button class="btn btn-secondary" onclick="closeCategoryPicker()">Cancel</button>
-                <button class="btn btn-success" id="select-uncategorized-btn" onclick="selectUncategorized()">
-                    Set as Uncategorized
+                <button class="btn btn-warning" onclick="selectUncategorized()">
+                    ✗ Clear Category
+                </button>
+                <button class="btn btn-success" id="assign-category-btn" onclick="assignSelectedCategory()" disabled>
+                    ✓ Assign Category
                 </button>
             </div>
         </div>
@@ -159,16 +162,19 @@
 <script>
 let currentTransaction = null;
 let selectedCategoryPath = [];
+let selectedCategoryId = null;
 let allCategoriesForPicker = [];
 
 function openCategoryPicker(transactionId) {
     currentTransaction = transactionId;
     selectedCategoryPath = [];
+    selectedCategoryId = null;
     
     // Load categories and show modal
     loadCategoriesForPicker().then(() => {
         showLevel1Categories();
         document.getElementById('category-picker-modal').classList.add('active');
+        document.getElementById('assign-category-btn').disabled = true;
     });
 }
 
@@ -279,8 +285,15 @@ function showLevel2Categories(categories) {
 
 function selectLevel2(category) {
     selectedCategoryPath = [selectedCategoryPath[0], category];
+    selectedCategoryId = category.id;
     
-    // Show level 3 children or allow selection
+    // Highlight selection in level 2
+    document.querySelectorAll('#level-2-list .category-option').forEach(el => {
+        el.classList.remove('selected');
+    });
+    event.target.closest('.category-option').classList.add('selected');
+    
+    // Show level 3 children if they exist
     const children = allCategoriesForPicker.filter(c => c.parent_id === category.id);
     
     if (children.length > 0) {
@@ -288,11 +301,12 @@ function selectLevel2(category) {
         document.getElementById('level-3-column').style.display = 'block';
         document.getElementById('level-3-title').textContent = category.name;
     } else {
-        // Can select this category
+        // No children, this is selectable
         document.getElementById('level-3-column').style.display = 'none';
-        finalizeCategorySelection(category.id);
     }
     
+    // Enable assign button
+    document.getElementById('assign-category-btn').disabled = false;
     updateBreadcrumb();
 }
 
@@ -321,8 +335,17 @@ function showLevel3Categories(categories) {
 
 function selectLevel3(category) {
     selectedCategoryPath = [selectedCategoryPath[0], selectedCategoryPath[1], category];
+    selectedCategoryId = category.id;
+    
+    // Highlight selection in level 3
+    document.querySelectorAll('#level-3-list .category-option').forEach(el => {
+        el.classList.remove('selected');
+    });
+    event.target.closest('.category-option').classList.add('selected');
+    
+    // Enable assign button
+    document.getElementById('assign-category-btn').disabled = false;
     updateBreadcrumb();
-    finalizeCategorySelection(category.id);
 }
 
 function updateBreadcrumb() {
@@ -336,13 +359,22 @@ function updateBreadcrumb() {
     }
 }
 
-async function finalizeCategorySelection(categoryId) {
+async function assignSelectedCategory() {
+    if (!selectedCategoryId) {
+        alert('Please select a category first');
+        return;
+    }
+    
     // Update the transaction
-    await updateTransactionCategory(currentTransaction, categoryId);
+    await updateTransactionCategory(currentTransaction, selectedCategoryId);
     closeCategoryPicker();
 }
 
 async function selectUncategorized() {
+    if (!confirm('Remove category from this transaction?')) {
+        return;
+    }
+    
     await updateTransactionCategory(currentTransaction, null);
     closeCategoryPicker();
 }

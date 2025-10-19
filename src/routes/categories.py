@@ -13,8 +13,14 @@ categories_bp = Blueprint('categories', __name__, url_prefix='/categories')
 
 @categories_bp.route('/')
 def categories_page():
-    """Render the categories management page."""
+    """Render the categories overview page."""
     return render_template('categories.html')
+
+
+@categories_bp.route('/manage')
+def category_management_page():
+    """Render the category management page."""
+    return render_template('category_management.html')
 
 
 @categories_bp.route('/api/all', methods=['GET'])
@@ -141,6 +147,94 @@ def create_category():
     
     except ValueError as e:
         return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@categories_bp.route('/api/<int:category_id>', methods=['DELETE'])
+def delete_category(category_id):
+    """Delete a category."""
+    try:
+        category_model = Category(current_app.config['DATABASE'])
+        success = category_model.delete(category_id)
+        
+        if not success:
+            return jsonify({'success': False, 'error': 'Category not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'message': 'Category deleted successfully'
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@categories_bp.route('/api/rules/create', methods=['POST'])
+def create_rule():
+    """
+    Create a new categorization rule.
+    
+    Request JSON:
+        {
+            "pattern": str,
+            "category_id": int,
+            "priority": int (0-100)
+        }
+    
+    Returns:
+        JSON with new rule ID
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        pattern = data.get('pattern', '').strip().upper()
+        category_id = data.get('category_id')
+        priority = data.get('priority', 50)
+        
+        if not all([pattern, category_id]):
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        
+        engine = CategorizationEngine(current_app.config['DATABASE'])
+        rule_id = engine.create_rule(pattern, category_id, priority)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Rule "{pattern}" created successfully',
+            'rule_id': rule_id
+        })
+    
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@categories_bp.route('/api/rules/<int:rule_id>', methods=['DELETE'])
+def delete_rule(rule_id):
+    """Delete a categorization rule."""
+    try:
+        import sqlite3
+        conn = sqlite3.connect(current_app.config['DATABASE'])
+        cursor = conn.cursor()
+        
+        cursor.execute("DELETE FROM categorization_rules WHERE id = ?", (rule_id,))
+        deleted = cursor.rowcount > 0
+        
+        conn.commit()
+        conn.close()
+        
+        if not deleted:
+            return jsonify({'success': False, 'error': 'Rule not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'message': 'Rule deleted successfully'
+        })
+    
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

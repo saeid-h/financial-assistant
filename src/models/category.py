@@ -152,8 +152,8 @@ class Category:
         if not name or not name.strip():
             raise ValueError("Category name is required")
         
-        if category_type not in ['income', 'expense']:
-            raise ValueError("Category type must be 'income' or 'expense'")
+        if category_type not in ['income', 'expense', 'transfer']:
+            raise ValueError("Category type must be 'income', 'expense', or 'transfer'")
         
         if level not in [1, 2, 3]:
             raise ValueError("Category level must be 1, 2, or 3")
