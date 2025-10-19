@@ -24,16 +24,20 @@ def transactions_page():
 
 @transactions_bp.route('/api/all')
 def get_all_transactions():
-    """Get all transactions with optional filtering."""
+    """Get all transactions with optional filtering by account and date range."""
     try:
         account_id = request.args.get('account_id', type=int)
+        date_from = request.args.get('date_from', type=str)
+        date_to = request.args.get('date_to', type=str)
         limit = request.args.get('limit', type=int)
-        offset = request.args.get('offset', 0, type=int)
         
-        if account_id:
-            transactions = Transaction.get_by_account(account_id, limit=limit)
-        else:
-            transactions = Transaction.get_all(limit=limit)
+        # Get filtered transactions
+        transactions = Transaction.get_filtered(
+            account_id=account_id,
+            date_from=date_from,
+            date_to=date_to,
+            limit=limit
+        )
         
         return jsonify({
             'success': True,
@@ -83,15 +87,18 @@ def delete_transaction(transaction_id):
 
 @transactions_bp.route('/api/stats')
 def get_transaction_stats():
-    """Get transaction statistics."""
+    """Get transaction statistics with optional filtering."""
     try:
         account_id = request.args.get('account_id', type=int)
+        date_from = request.args.get('date_from', type=str)
+        date_to = request.args.get('date_to', type=str)
         
-        # Get all transactions for stats
-        if account_id:
-            transactions = Transaction.get_by_account(account_id)
-        else:
-            transactions = Transaction.get_all()
+        # Get filtered transactions for stats
+        transactions = Transaction.get_filtered(
+            account_id=account_id,
+            date_from=date_from,
+            date_to=date_to
+        )
         
         # Calculate stats
         total_transactions = len(transactions)

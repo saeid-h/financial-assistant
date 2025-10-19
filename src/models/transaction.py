@@ -217,4 +217,59 @@ class Transaction:
         conn.close()
         
         return count
+    
+    @staticmethod
+    def get_filtered(account_id: Optional[int] = None, 
+                    date_from: Optional[str] = None, 
+                    date_to: Optional[str] = None,
+                    limit: Optional[int] = None) -> List[Dict]:
+        """
+        Get transactions with optional filtering by account and date range.
+        
+        Args:
+            account_id: Optional account ID to filter by
+            date_from: Optional start date (YYYY-MM-DD)
+            date_to: Optional end date (YYYY-MM-DD)
+            limit: Optional limit on number of transactions
+        
+        Returns:
+            List of transaction dictionaries
+        """
+        conn = sqlite3.connect(Transaction._get_db_path())
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Build query with filters
+        query = """
+            SELECT t.*, c.name as category_name, a.name as account_name
+            FROM transactions t
+            LEFT JOIN categories c ON t.category_id = c.id
+            LEFT JOIN accounts a ON t.account_id = a.id
+            WHERE 1=1
+        """
+        params = []
+        
+        if account_id:
+            query += " AND t.account_id = ?"
+            params.append(account_id)
+        
+        if date_from:
+            query += " AND t.date >= ?"
+            params.append(date_from)
+        
+        if date_to:
+            query += " AND t.date <= ?"
+            params.append(date_to)
+        
+        query += " ORDER BY t.date DESC, t.id DESC"
+        
+        if limit:
+            query += f" LIMIT {limit}"
+        
+        cursor.execute(query, params)
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return [dict(row) for row in rows]
 

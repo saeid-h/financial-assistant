@@ -10,10 +10,13 @@
             <select id="account-filter" class="form-select">
                 <option value="">All Accounts</option>
             </select>
-            <button id="refresh-btn" class="btn btn-secondary">⟳ Refresh</button>
+            <input type="date" id="date-from" class="form-input" placeholder="From Date">
+            <input type="date" id="date-to" class="form-input" placeholder="To Date">
+            <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
+            <button id="clear-filters-btn" class="btn btn-secondary">Clear</button>
+            <button id="refresh-btn" class="btn btn-secondary">⟳</button>
         </div>
     </div>
-    
     <!-- Statistics Cards -->
     <div class="stats-grid">
         <div class="stat-card">
@@ -91,12 +94,19 @@
         gap: 10px;
     }
     
-    .form-select {
+    .form-select, .form-input {
         padding: 8px 12px;
         border: 1px solid #ddd;
         border-radius: 5px;
         font-size: 1rem;
+    }
+    
+    .form-select {
         min-width: 200px;
+    }
+    
+    .form-input {
+        min-width: 150px;
     }
     
     .stats-grid {
@@ -265,6 +275,8 @@
 
 <script>
     let currentAccountFilter = '';
+    let currentDateFrom = '';
+    let currentDateTo = '';
     
     // Format number with thousands separator
     function formatCurrency(amount) {
@@ -303,12 +315,20 @@
         }
     }
     
+    // Build query params
+    function buildQueryParams() {
+        const params = new URLSearchParams();
+        if (currentAccountFilter) params.append('account_id', currentAccountFilter);
+        if (currentDateFrom) params.append('date_from', currentDateFrom);
+        if (currentDateTo) params.append('date_to', currentDateTo);
+        return params.toString();
+    }
+    
     // Load statistics
     async function loadStats() {
         try {
-            const url = currentAccountFilter 
-                ? `/transactions/api/stats?account_id=${currentAccountFilter}`
-                : '/transactions/api/stats';
+            const params = buildQueryParams();
+            const url = `/transactions/api/stats${params ? '?' + params : ''}`;
             
             const response = await fetch(url);
             const data = await response.json();
@@ -337,9 +357,8 @@
         container.style.display = 'none';
         
         try {
-            const url = currentAccountFilter 
-                ? `/transactions/api/all?account_id=${currentAccountFilter}`
-                : '/transactions/api/all';
+            const params = buildQueryParams();
+            const url = `/transactions/api/all${params ? '?' + params : ''}`;
             
             const response = await fetch(url);
             const data = await response.json();
@@ -416,9 +435,23 @@
         }
     }
     
-    // Account filter change
-    document.getElementById('account-filter').addEventListener('change', (e) => {
-        currentAccountFilter = e.target.value;
+    // Apply filters button
+    document.getElementById('apply-filters-btn').addEventListener('click', () => {
+        currentAccountFilter = document.getElementById('account-filter').value;
+        currentDateFrom = document.getElementById('date-from').value;
+        currentDateTo = document.getElementById('date-to').value;
+        loadStats();
+        loadTransactions();
+    });
+    
+    // Clear filters button
+    document.getElementById('clear-filters-btn').addEventListener('click', () => {
+        document.getElementById('account-filter').value = '';
+        document.getElementById('date-from').value = '';
+        document.getElementById('date-to').value = '';
+        currentAccountFilter = '';
+        currentDateFrom = '';
+        currentDateTo = '';
         loadStats();
         loadTransactions();
     });

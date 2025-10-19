@@ -198,12 +198,13 @@ def confirm_import():
         for txn in valid_transactions:
             duplicate_check = detector.check_duplicate(txn)
             
-            # Only import if not an exact duplicate
-            if duplicate_check['status'] == 'unique':
+            # Only import if not a duplicate (is_duplicate = False means unique)
+            if not duplicate_check['is_duplicate']:
                 non_duplicate_transactions.append(txn)
             else:
                 duplicate_count += 1
-                print(f"Skipping duplicate: {txn['date']} - {txn['description']} - ${txn['amount']}")
+                confidence = duplicate_check['confidence']
+                print(f"Skipping duplicate (confidence: {confidence:.0%}): {txn['date']} - {txn['description']} - ${txn['amount']}")
         
         # Save non-duplicate transactions to database
         count = Transaction.bulk_create(non_duplicate_transactions) if non_duplicate_transactions else 0
