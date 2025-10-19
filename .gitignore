@@ -42,6 +42,10 @@ env/
 .cursor/*.json
 !.cursor/rules/
 
+# Cursor AGENT files (personal shortcuts)
+AGENT
+AGENT.*
+
 # Testing
 .pytest_cache/
 .coverage
