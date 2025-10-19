@@ -227,11 +227,17 @@ class CSVParser:
             debit = self._parse_amount(row[column_map.get('debit', 'debit')]) if column_map.get('debit') else 0.0
             credit = self._parse_amount(row[column_map.get('credit', 'credit')]) if column_map.get('credit') else 0.0
             
-            # Credit is positive, debit is negative
+            # For credit card statements:
+            # - Debit column = Charges/Purchases = NEGATIVE (you spent money)
+            # - Credit column = Payments = POSITIVE (you paid off card)
+            # For bank accounts, it's the opposite:
+            # - Debit = Withdrawals = negative
+            # - Credit = Deposits = positive
+            
             if credit != 0.0:
-                amount = credit
+                amount = abs(credit)  # Payments/deposits are positive
             elif debit != 0.0:
-                amount = -abs(debit)
+                amount = -abs(debit)  # Charges/withdrawals are negative
             else:
                 return None  # No transaction amount
         

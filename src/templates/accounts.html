@@ -54,12 +54,29 @@
             border-radius: 8px;
             padding: 20px;
             transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
         }
         
         .account-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
             border-color: #667eea;
+        }
+        
+        .account-card::after {
+            content: "Click to edit";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.75rem;
+            color: #999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .account-card:hover::after {
+            opacity: 1;
         }
         
         .account-card h3 {
@@ -268,6 +285,50 @@
         </div>
     </div>
     
+    <!-- Edit Account Modal -->
+    <div id="edit-account-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Account</h2>
+                <button class="close-btn" onclick="closeEditAccountModal()">&times;</button>
+            </div>
+            
+            <div id="edit-modal-error" class="error-message"></div>
+            
+            <form id="edit-account-form" onsubmit="handleEditAccount(event)">
+                <input type="hidden" id="edit-account-id" name="id">
+                
+                <div class="form-group">
+                    <label for="edit-account-name">Account Name *</label>
+                    <input type="text" id="edit-account-name" name="name" required 
+                           placeholder="e.g., Chase Checking">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-account-type">Account Type *</label>
+                    <select id="edit-account-type" name="type" required>
+                        <option value="">Select type...</option>
+                        <option value="checking">Checking</option>
+                        <option value="savings">Savings</option>
+                        <option value="credit">Credit Card</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-account-institution">Financial Institution</label>
+                    <input type="text" id="edit-account-institution" name="institution" 
+                           placeholder="e.g., Chase Bank">
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Update Account</button>
+                    <button type="button" class="btn" style="background: #dc3545; color: white; flex: 1;" 
+                            onclick="handleDeleteAccount()">Delete Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <script>
         // Load accounts on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -305,7 +366,7 @@
             emptyState.style.display = 'none';
             
             container.innerHTML = accounts.map(account => `
-                <div class="account-card">
+                <div class="account-card" onclick='openEditAccountModal(${JSON.stringify(account)})'>
                     <h3>${escapeHtml(account.name)}</h3>
                     <span class="account-type type-${account.type}">${capitalizeFirst(account.type)}</span>
                     ${account.institution ? `<div class="account-institution">${escapeHtml(account.institution)}</div>` : ''}
@@ -324,6 +385,88 @@
         // Close add account modal
         function closeAddAccountModal() {
             document.getElementById('add-account-modal').classList.remove('active');
+        }
+        
+        // Open edit account modal
+        function openEditAccountModal(account) {
+            document.getElementById('edit-account-id').value = account.id;
+            document.getElementById('edit-account-name').value = account.name;
+            document.getElementById('edit-account-type').value = account.type;
+            document.getElementById('edit-account-institution').value = account.institution || '';
+            document.getElementById('edit-modal-error').style.display = 'none';
+            document.getElementById('edit-account-modal').classList.add('active');
+        }
+        
+        // Close edit account modal
+        function closeEditAccountModal() {
+            document.getElementById('edit-account-modal').classList.remove('active');
+        }
+        
+        // Handle edit account form submission
+        async function handleEditAccount(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const accountId = formData.get('id');
+            
+            const data = {
+                name: formData.get('name'),
+                type: formData.get('type'),
+                institution: formData.get('institution') || null
+            };
+            
+            try {
+                const response = await fetch(`/api/accounts/${accountId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('Account updated successfully!');
+                    closeEditAccountModal();
+                    loadAccounts();
+                } else {
+                    document.getElementById('edit-modal-error').textContent = result.error;
+                    document.getElementById('edit-modal-error').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('edit-modal-error').textContent = 'Error updating account';
+                document.getElementById('edit-modal-error').style.display = 'block';
+            }
+        }
+        
+        // Handle delete account
+        async function handleDeleteAccount() {
+            const accountId = document.getElementById('edit-account-id').value;
+            const accountName = document.getElementById('edit-account-name').value;
+            
+            if (!confirm(`Are you sure you want to delete "${accountName}"? This cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/accounts/${accountId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('Account deleted successfully!');
+                    closeEditAccountModal();
+                    loadAccounts();
+                } else {
+                    alert('Error deleting account: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error deleting account');
+            }
         }
         
         // Handle add account form submission
